@@ -34,7 +34,7 @@ Cada empresa personalizada vive no seu **próprio diretório, irmão do template
 1. `docs/` é documentação sobre o próprio template (ex.: `fase-1-fecho.md`, `levantamento-modulos.md`); misturar aí dados de clientes concretos suja essa pasta à medida que forem aparecendo empresas.
 2. Dentro da app, "Cliente" já tem um significado próprio (o cliente do módulo 3). Chamar "clientes" à pasta das empresas que personalizam o template colidiria com esse vocabulário — por isso usa-se **"empresas"**, o mesmo termo que o próprio Módulo 1 ("Empresa e utilizadores") já usa.
 
-O diretório de cada empresa é criado **antes** de haver qualquer código — contém só os documentos de personalização. Quando, numa fase posterior, se decidir avançar para código para essa empresa, o template (`src/`, `preview/`) é copiado para dentro desse mesmo diretório, ao lado dos perfis já validados, em vez de se moverem ficheiros mais tarde. O projeto não é atualmente um repositório git, pelo que esta cópia é uma cópia de ficheiros simples, não um fork/branch.
+O diretório de cada empresa é criado **antes** de haver qualquer código — contém só os documentos de personalização. Quando, numa fase posterior, se decidir avançar para código para essa empresa, o template (`src/`, `preview/`) é copiado para dentro desse mesmo diretório, ao lado dos perfis já validados, em vez de se moverem ficheiros mais tarde. Entretanto, o projeto passou a ser um repositório git — inicializado especificamente para correr o workflow de implementação deste procedimento (branches, worktrees, commits por tarefa) — mas isso não muda o comportamento aqui descrito: a cópia do template para a empresa continua a ser uma cópia de ficheiros simples, não um fork/branch.
 
 ## Fluxo de alto nível
 
@@ -42,17 +42,17 @@ O diretório de cada empresa é criado **antes** de haver qualquer código — c
 1ª vez para uma empresa nova:
   /personalizar-empresa
     → Q&A: identificação, vocabulário-base, marca, processo por módulo base
-    → grava empresas/<slug>/perfil-empresa.md
+    → grava <slug>/perfil-empresa.md
 
 Por cada módulo, em qualquer ordem, em qualquer sessão:
   /personalizar-modulo <nome>
-    → lê perfil-empresa.md (corre uma versão mínima de /personalizar-empresa
-      na hora, se ainda não existir)
+    → lê perfil-empresa.md (se não existir, recusa avançar e oferece invocar
+      /personalizar-empresa primeiro — nunca gera um perfil parcial na hora)
     → confirma ativação, se for módulo opcional
     → Q&A específica do módulo (só o que não foi já herdado do perfil)
     → gera mockup (Artifact HTML) com o vocabulário/marca/regras aplicados
     → utilizador aprova, ou pede ajustes → repete até aprovação
-    → grava empresas/<slug>/modulos/<nome>.md e assinala o módulo
+    → grava <slug>/modulos/<nome>.md e assinala o módulo
       como validado em perfil-empresa.md
 ```
 
@@ -102,7 +102,7 @@ O Módulo 1 (Onboarding/Empresa) não tem questionário próprio em `/personaliz
 4. **Questionário específico do módulo** — ver padrão e lista módulo a módulo abaixo.
 5. **Gerar mockup** (Artifact HTML) — ecrãs-chave desse módulo, com o vocabulário/marca/regras aplicados e dados de exemplo coerentes com o processo descrito (não os "Lisboa/Porto" genéricos do template).
 6. **Validar** — aprova, ou pede ajustes e volta ao passo 4/5 até aprovação. Pedidos de ajuste republicam o mesmo Artifact (mesmo link), em vez de gerar um novo a cada iteração.
-7. **Gravar** `empresas/<slug>/modulos/<nome>.md` (respostas + link do mockup aprovado + data) e assinala o módulo como validado em `perfil-empresa.md`.
+7. **Gravar** `<slug>/modulos/<nome>.md` (respostas + link do mockup aprovado + data) e assinala o módulo como validado em `perfil-empresa.md`.
 
 ### Casos limite
 
@@ -186,7 +186,7 @@ Um Artifact HTML por módulo, com os ecrãs-chave desse módulo já com o vocabu
 ## Armazenamento
 
 ```
-empresas/<slug>/
+<slug>/                      # irmão da raiz do template, não uma subpasta dela
   perfil-empresa.md          # identificação, vocabulário-base, marca,
                               # processo por módulo base, módulos opcionais ativados
   modulos/
