@@ -1,0 +1,1852 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clientes · AppOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --green:#17643e; --green-h:#0f4f30; --green-soft:#e9f4ee; --green-line:#cde5d6;
+    --ink:#15181c; --ink-2:#3d444d; --mute:#6b7280; --faint:#9aa1ab;
+    --line:#e6e8ec; --line-2:#d3d8de; --sunk:#f6f7f8; --surface:#ffffff; --ground:#e9ecef;
+    --ok-bg:#e7f5ec; --ok-fg:#17643e; --ok-dot:#2e9e5b;
+    --warn-bg:#fdf3d7; --warn-fg:#80570a; --warn-dot:#e0a30b;
+    --bad-bg:#fdecea; --bad-fg:#b42318; --bad-dot:#e5484d;
+    --dark-bg:#e8eaed; --dark-fg:#2b3139; --dark-dot:#3b424b;
+    --info-bg:#edf3fb; --info-line:#d5e2f3; --info-fg:#2a5592;
+    --sh:0 1px 2px rgba(17,24,39,.04), 0 8px 24px -16px rgba(17,24,39,.22);
+    --sh-pop:0 18px 50px -18px rgba(17,24,39,.38), 0 2px 6px rgba(17,24,39,.06);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.45 "Public Sans","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .i{width:18px;height:18px;flex:none}
+  input[type=checkbox]{accent-color:var(--green);width:18px;height:18px;margin:0;flex:none;cursor:pointer}
+
+  /* ---------- pré-visualização ---------- */
+  .shell{display:flex;flex-direction:column;height:100dvh}
+  .chrome{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-block:10px;padding-inline:16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .chrome h2{margin:0 auto 0 0;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .chrome label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute)}
+  .chrome select{border:1px solid var(--line-2);border-radius:999px;background:var(--surface);padding:6px 12px;font-size:12.5px;font-weight:500;color:var(--ink)}
+  .seg{display:flex;gap:2px;background:var(--sunk);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;font-size:12.5px;font-weight:500;color:var(--ink-2);padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(17,24,39,.14)}
+  .chrome .reset{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500}
+  .stage{flex:1;min-height:0;display:flex;justify-content:center;padding:16px}
+  .device{position:relative;width:100%;max-width:1440px;height:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--sh);container:app / inline-size;transition:max-width .25s ease}
+  .stage[data-w="390"] .device{max-width:390px}
+  .stage[data-w="768"] .device{max-width:768px}
+  .viewport{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}
+  .layer{position:absolute;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+  .layer>*{pointer-events:auto}
+  @media (max-width:700px){
+    .stage{padding:0} .device{border:0;border-radius:0}
+    .chrome .w-seg{display:none} .chrome h2{flex-basis:100%}
+  }
+
+  /* ---------- topo ---------- */
+  .topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-inline:28px;min-height:64px}
+  .logo{font-weight:700;font-size:22px;letter-spacing:-.035em;color:var(--ink);text-decoration:none}
+  .logo span{color:var(--green)}
+  .nav{display:flex;gap:2px;height:64px}
+  .nav a{display:flex;align-items:center;padding:0 14px;font-size:14px;font-weight:500;color:var(--ink-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .nav a:hover{color:var(--ink)}
+  .nav a[aria-current="page"]{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .tb-right{display:flex;justify-content:flex-end;align-items:center;gap:10px}
+  .chip-mod{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:0;border-radius:9px;background:var(--green);color:#fff;font-weight:600;font-size:14px;white-space:nowrap}
+  .chip-mod:hover{background:var(--green-h)}
+  .av{display:inline-grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:#eef0f3;color:var(--ink-2);font-size:12px;font-weight:600}
+  .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:var(--ink-2);flex:none}
+  .icon-btn:hover{background:var(--sunk);color:var(--ink)}
+  .icon-btn[aria-expanded="true"]{background:var(--sunk)}
+  @container app (max-width:999px){
+    .topbar{grid-template-columns:1fr auto;padding-inline:16px}
+    .nav{grid-column:1 / -1;order:3;height:46px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:6px;border-top:1px solid var(--line)}
+  }
+  @container app (max-width:420px){ .chip-mod{padding:0 11px} }
+
+  /* ---------- página ---------- */
+  .page{max-width:1200px;margin:0 auto;padding-block:26px 56px;padding-inline:32px}
+  @container app (max-width:759px){ .page{padding-inline:16px;padding-block:18px 40px} }
+  .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px;font-size:12.5px;color:var(--mute)}
+  .crumbs button{border:0;background:none;padding:2px 0;color:var(--mute);font-size:12.5px}
+  .crumbs button:hover{color:var(--green);text-decoration:underline;text-underline-offset:3px}
+  .crumbs [aria-current]{color:var(--ink-2);font-weight:500}
+  .crumbs .sep{color:var(--faint)}
+  .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+  .eyebrow{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  h1{margin:6px 0 0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.025em}
+  .lede{margin:6px 0 0;color:var(--ink-2);font-size:14.5px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .head-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  @container app (max-width:559px){
+    h1{font-size:26px}
+    .head-actions{width:100%} .head-actions .btn{flex:1}
+  }
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:10px;border:1px solid transparent;font-size:14px;font-weight:600;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+  .btn:focus-visible,.icon-btn:focus-visible,.chip-mod:focus-visible,.tab:focus-visible,.link:focus-visible,.crow:focus-visible,.crumbs button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .btn-primary{background:var(--green);color:#fff}
+  .btn-primary:hover{background:var(--green-h)}
+  .btn-outline{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+  .btn-outline:hover{border-color:var(--faint)}
+  .btn-soft{background:var(--green-soft);color:var(--green)}
+  .btn-soft:hover{background:#dcede3}
+  .btn-danger-solid{background:#b42318;color:#fff}
+  .btn-danger-solid:hover{background:#951d14}
+  .btn-ghost{background:transparent;color:var(--ink-2)}
+  .btn-ghost:hover{background:var(--sunk)}
+  .btn-sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+  .btn-sm .i{width:15px;height:15px}
+  .btn-wide{width:100%}
+  .btn[disabled]{opacity:.55;cursor:default}
+  .link{border:0;background:none;padding:0;color:var(--green);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--green-line)}
+  .link:hover{text-decoration-color:var(--green)}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:500;white-space:nowrap}
+  .pill.ok{background:var(--ok-bg);color:var(--ok-fg)}
+  .pill.warn{background:var(--warn-bg);color:var(--warn-fg)}
+  .pill.bad{background:var(--bad-bg);color:var(--bad-fg)}
+  .pill.dark{background:var(--dark-bg);color:var(--dark-fg)}
+  .pill.dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .pill.ok.dot::before{background:var(--ok-dot)} .pill.warn.dot::before{background:var(--warn-dot)} .pill.bad.dot::before{background:var(--bad-dot)} .pill.dark.dot::before{background:var(--dark-dot)}
+  .svc{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:11.5px;font-weight:500;white-space:nowrap}
+  .svc.ok{background:var(--ok-bg);color:var(--ok-fg)}
+  .svc.info{background:var(--info-bg);color:var(--info-fg)}
+  .svc.warn{background:var(--warn-bg);color:var(--warn-fg)}
+  .svc.neutral{background:#eef0f3;color:var(--ink-2)}
+  .tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:#eef0f3;color:var(--mute);font-size:11px;font-weight:600;vertical-align:1px}
+
+  /* ---------- barra de filtros ---------- */
+  .toolbar{display:grid;grid-template-columns:minmax(220px,2.4fr) repeat(3,minmax(0,1fr));gap:10px;margin-top:22px}
+  @container app (max-width:899px){ .toolbar{grid-template-columns:repeat(3,minmax(0,1fr))} .toolbar .search{grid-column:1 / -1} }
+  @container app (max-width:559px){ .toolbar{grid-template-columns:1fr 1fr} .toolbar .more{grid-column:1 / -1} }
+  .search{position:relative;display:block}
+  .search .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);width:17px;height:17px}
+  .ctl{width:100%;height:42px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);font-size:14px;transition:border-color .15s,box-shadow .15s}
+  .search .ctl{padding-left:38px}
+  select.ctl,.fld select{appearance:none;padding-right:34px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%233d444d' stroke-width='1.6'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E") no-repeat right 12px center/11px}
+  .ctl:hover{border-color:var(--faint)}
+  .ctl:focus,.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(23,100,62,.14)}
+  button.ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+  button.ctl .count{margin-left:auto}
+  input::placeholder,textarea::placeholder{color:var(--faint)}
+  .count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--green);color:#fff;font-size:11px;font-weight:600}
+  .listbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 10px;color:var(--mute);font-size:13px}
+  .listbar label{display:flex;align-items:center;gap:10px}
+  .listbar select{width:auto;min-width:170px;height:38px}
+
+  /* ---------- lista de clientes ---------- */
+  .clist{display:flex;flex-direction:column;gap:10px}
+  .crow{display:grid;grid-template-columns:64px minmax(0,1.25fr) minmax(0,1.45fr) 92px 92px 108px 40px;align-items:center;gap:16px;padding:12px 12px 12px 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);cursor:pointer;transition:border-color .15s,background .15s}
+  .crow:hover{border-color:var(--green-line);background:#fbfdfc}
+  .thumb{width:64px;height:56px;border-radius:8px;overflow:hidden;background:#e6ecef;flex:none}
+  .thumb svg{display:block;width:100%;height:100%}
+  .c-name b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .c-name small{display:block;margin-top:2px;color:var(--mute);font-size:12.5px}
+  .c-contact{display:flex;gap:10px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+  .c-contact .i{width:16px;height:16px;color:var(--mute);margin-top:1px}
+  .c-contact b{display:block;font-weight:500;font-size:13.5px;color:var(--ink)}
+  .c-contact span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .c-count{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center}
+  .c-count .i{width:17px;height:17px;color:var(--ink-2)}
+  .c-count b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+  .c-count small{grid-column:2;color:var(--mute);font-size:12px}
+  @container app (max-width:959px){
+    .crow{grid-template-columns:56px auto auto minmax(0,1fr) 40px;grid-template-areas:"img name name st act" "img contact contact contact act" "img loc unit . act";column-gap:20px;row-gap:10px;align-items:start}
+    .thumb{width:56px;height:56px;grid-area:img}
+    .c-name{grid-area:name} .c-contact{grid-area:contact} .c-status{grid-area:st;justify-self:end}
+    .c-count.loc{grid-area:loc} .c-count.unit{grid-area:unit}
+    .c-act{grid-area:act}
+    .c-count{display:flex;gap:6px;align-items:baseline} .c-count .i{align-self:center} .c-count b{font-size:14px}
+  }
+  @container app (max-width:520px){
+    .crow{grid-template-columns:48px auto minmax(0,1fr) 36px;grid-template-areas:"img name name act" "st st st st" "contact contact contact contact" "loc loc unit unit";column-gap:12px;padding:12px}
+    .thumb{width:48px;height:48px}
+    .c-status{justify-self:start}
+  }
+  .empty{padding:40px 16px;text-align:center;color:var(--mute);background:var(--surface);border:1px dashed var(--line-2);border-radius:12px}
+  .empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+
+  /* ---------- alojamentos ---------- */
+  .lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:18px;margin-top:22px}
+  .lcard{display:flex;flex-direction:column;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh)}
+  .lcard-img{height:160px;border-radius:9px;overflow:hidden;background:#e6ecef}
+  .lcard-img svg{display:block;width:100%;height:100%}
+  .lcard-body{padding:14px 4px 4px;display:flex;flex-direction:column;flex:1}
+  .lcard-top{display:flex;align-items:center;gap:8px}
+  .lcard-top h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em;flex:1;min-width:0}
+  .addr{display:flex;gap:8px;margin:8px 0 0;color:var(--ink-2);font-size:13px}
+  .addr .i{width:16px;height:16px;color:var(--mute);margin-top:1px}
+  .facts{margin:14px 0 0;display:flex;flex-direction:column;gap:9px}
+  .facts div{display:grid;grid-template-columns:24px minmax(110px,.9fr) minmax(0,1.2fr);align-items:center;gap:4px;font-size:13px}
+  .facts dt{display:contents;color:var(--mute)}
+  .facts dt .i{width:16px;height:16px;color:var(--mute)}
+  .facts dd{margin:0;display:flex;flex-wrap:wrap;gap:5px;color:var(--ink)}
+  .lcard .btn-wide{margin-top:16px}
+  .lnew{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:320px;border:1.5px dashed var(--line-2);border-radius:14px;background:transparent;color:var(--ink-2);font-weight:600}
+  .lnew:hover{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+  .plus{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--green-soft);color:var(--green)}
+
+  /* ---------- detalhe do local ---------- */
+  .tabs{display:flex;gap:4px;margin-top:22px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .tab{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:8px 8px 0 0;background:transparent;color:var(--ink-2);font-size:14px;font-weight:500;white-space:nowrap}
+  .tab:hover{color:var(--ink);background:var(--sunk)}
+  .tab[aria-selected="true"]{background:var(--green-soft);color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .dirty{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--warn-fg)}
+  .dirty::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn-dot)}
+  .cfg{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:18px;align-items:start}
+  .cfg.single{grid-template-columns:minmax(0,1fr);max-width:760px}
+  .col{display:flex;flex-direction:column;gap:16px;min-width:0}
+  @container app (max-width:959px){ .cfg{grid-template-columns:minmax(0,1fr)} }
+  .card{padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh)}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .card-h h3{margin:0;font-size:14.5px;font-weight:600}
+  .card-h .sub{font-size:12.5px;color:var(--mute)}
+  @container app (max-width:559px){ .card{padding:14px} }
+  .units-pick{display:flex;flex-wrap:wrap;gap:10px 22px}
+  .units-pick label,.check-row{display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer}
+  .check-row{align-items:flex-start;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .check-row b{display:block;font-weight:500}
+  .check-row small{display:block;margin-top:2px;color:var(--mute);font-size:12.5px}
+  .switch-card{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+  .switch-card input{position:absolute;opacity:0;width:1px;height:1px}
+  .sw{position:relative;flex:none;width:42px;height:24px;border-radius:999px;background:#c9ced5;transition:background .15s;margin-top:1px}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+  input:checked+.sw{background:var(--green)} input:checked+.sw::after{transform:translateX(18px)}
+  input:focus-visible+.sw{box-shadow:0 0 0 3px rgba(23,100,62,.22)}
+  .switch-card b{display:block;font-weight:600;font-size:13.5px}
+  .switch-card small{display:block;margin-top:2px;color:var(--mute);font-size:12.5px}
+  .qty-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0}
+  .qty-row+.qty-row{border-top:1px solid var(--line)}
+  .qty-row label{font-size:13.5px;color:var(--ink-2)}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--surface)}
+  .stepper button{width:32px;height:34px;border:0;background:var(--sunk);color:var(--ink-2);display:grid;place-items:center}
+  .stepper button:hover{background:#eceff2}
+  .stepper input{width:48px;height:34px;border:0;border-inline:1px solid var(--line-2);text-align:center;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+  .stepper input::-webkit-inner-spin-button{display:none}
+  .stepper span{padding:0 8px;color:var(--mute);font-size:12px}
+  .note{display:flex;gap:9px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--info-bg);border:1px solid var(--info-line);color:var(--info-fg);font-size:12.5px}
+  .note .i{width:16px;height:16px;margin-top:1px}
+  .note.warn{background:#fffaf0;border-color:#f3dfae;color:var(--warn-fg)}
+  .note.plain{background:var(--sunk);border-color:var(--line);color:var(--ink-2)}
+  .cals{container:cals / inline-size;display:flex;flex-direction:column;gap:10px}
+  .cal-row{display:grid;grid-template-columns:136px minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk)}
+  .cal-row .ctl{height:38px;background-color:var(--surface)}
+  .cal-acts{display:flex;gap:2px;align-items:center}
+  .cal-meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:12.5px;color:var(--mute)}
+  .cal-warn{grid-column:1 / -1} .cal-warn:empty{display:none} .cal-warn .note{margin-top:0}
+  @container cals (max-width:470px){ .cal-row{grid-template-columns:minmax(0,1fr) auto} .cal-row .cal-url{grid-column:1 / -1;grid-row:2} }
+  .cal-add{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .cal-sum{font-size:13px;color:var(--ink-2);margin:-4px 0 6px}
+  .cal-sum-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .cal-sum-row .grow{flex:1;min-width:0}
+  .cal-sum-row .chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+  .svc.bad{background:var(--bad-bg);color:var(--bad-fg)}
+  .unit-link{border:0;background:none;padding:0;font-weight:600;color:var(--ink);text-align:left}
+  .unit-link:hover{color:var(--green);text-decoration:underline;text-underline-offset:3px}
+  .summary-bar{display:flex;align-items:center;gap:10px;margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--green-soft);border:1px solid var(--green-line);color:var(--ink-2);font-size:13px}
+  .summary-bar .i{color:var(--green)}
+  .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+  @container app (max-width:699px){ .steps{grid-template-columns:1fr} }
+  .step{padding:12px;border-radius:10px;background:var(--sunk);font-size:13px;color:var(--ink-2)}
+  .step b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;margin-bottom:4px}
+  .step b i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--green-soft);color:var(--green);font-style:normal;font-size:12px}
+
+  /* ---------- tabelas ---------- */
+  .tablewrap{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--sh)}
+  .tscroll{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{text-align:left;font-size:12.5px;font-weight:500;color:var(--mute);background:var(--sunk);padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .tbl td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tr.sel{background:#f7fbf8}
+  .tbl .cb{width:44px;padding-right:0}
+  .tbl .act{width:52px;text-align:right;padding-right:8px}
+  .tbl .num{font-variant-numeric:tabular-nums}
+  .tbl b{font-weight:600}
+  .tbl small{display:block;color:var(--mute);font-size:12px}
+  .muted{color:var(--mute)}
+  @container app (max-width:759px){
+    .tbl-units thead{display:none}
+    .tbl-units,.tbl-units tbody{display:block}
+    .tbl-units tr{display:grid;grid-template-columns:30px minmax(0,1fr) 36px;column-gap:10px;row-gap:5px;padding:12px 8px 12px 14px;border-bottom:1px solid var(--line)}
+    .tbl-units tbody tr:last-child{border-bottom:0}
+    .tbl-units td{display:block;padding:0;border:0}
+    .tbl-units td.cb{grid-row:1 / span 5;width:auto;padding-top:2px}
+    .tbl-units td.act{grid-column:3;grid-row:1 / span 5;width:auto;padding:0}
+    .tbl-units td:not(.cb):not(.act){grid-column:2;font-size:13px}
+    .tbl-units td[data-l]::before{content:attr(data-l) ": ";color:var(--mute)}
+  }
+  .unit-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+  .unit-bar .left{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--ink-2)}
+  .unit-bar .right{display:flex;flex-wrap:wrap;gap:8px}
+  .mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+  @container app (max-width:599px){ .mini-stats{grid-template-columns:1fr} }
+  .mini{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  .mini b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .mini span{font-size:12.5px;color:var(--mute)}
+
+  /* ---------- camadas ---------- */
+  .backdrop{position:absolute;inset:0;background:rgba(17,24,39,.4);animation:fade .18s ease}
+  .drawer{position:absolute;top:0;right:0;bottom:0;width:min(600px,100%);background:var(--surface);box-shadow:var(--sh-pop);display:flex;flex-direction:column;animation:slide .24s cubic-bezier(.2,.8,.2,1);container:dr / inline-size}
+  .dr-scroll{flex:1;overflow:auto;padding:22px 24px 28px;overscroll-behavior:contain}
+  .dr-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid var(--line);background:var(--surface)}
+  .dr-close{position:absolute;top:12px;right:12px;z-index:2}
+  .dr-title{padding-right:36px}
+  .dr-title h2{margin:4px 0 0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .dr-title p{margin:6px 0 0;color:var(--ink-2)}
+  @container dr (max-width:479px){ .dr-scroll{padding:18px 16px 24px} .dr-foot{padding:12px 16px} .dr-foot .btn{flex:1 1 auto} }
+  .c-head{display:flex;gap:14px;align-items:center;padding-right:36px}
+  .c-head .thumb{width:72px;height:64px}
+  .c-head h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .c-head p{margin:3px 0 0;color:var(--mute)}
+  .subtabs{display:flex;gap:4px;margin-top:18px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .subtabs button{padding:9px 12px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;color:var(--ink-2);font-weight:500;white-space:nowrap}
+  .subtabs button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .info-list{margin:0}
+  .info-list div{display:grid;grid-template-columns:22px minmax(120px,.9fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+  .info-list div:first-child{border-top:0}
+  .info-list dt{display:contents;color:var(--mute)}
+  .info-list dt .i{width:16px;height:16px}
+  .info-list dd{margin:0;overflow-wrap:anywhere}
+  @container dr (max-width:439px){ .info-list div{grid-template-columns:22px minmax(0,1fr)} .info-list dd{grid-column:2} }
+  .totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .mloc{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+  .mloc:first-child{border-top:0}
+  .mloc .thumb{width:52px;height:44px}
+  .mloc .grow{flex:1;min-width:0}
+  .mloc b{display:block;font-weight:600}
+  .mloc small{display:block;color:var(--mute);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ugroup+.ugroup{margin-top:16px}
+  .ugroup h4{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--ink-2)}
+  .uchips{display:flex;flex-wrap:wrap;gap:6px}
+  .uchip{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:28px;padding:3px 4px 3px 10px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);font-size:12.5px}
+  .uchip small{color:var(--mute)}
+  .box{margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  .box-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .box-h h3{margin:0;font-size:14.5px;font-weight:600;flex:1}
+  .modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));max-height:calc(100% - 32px);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:var(--sh-pop);animation:pop .18s ease}
+  .modal.wide{width:min(520px,calc(100% - 32px))}
+  .modal-body{padding:22px;overflow:auto}
+  .modal h2{margin:0;font-size:18px;font-weight:700}
+  .modal p.m-sub{margin:6px 0 0;color:var(--ink-2)}
+  .modal .acts{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
+  .menu{position:absolute;min-width:220px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-pop);animation:pop .12s ease;z-index:5}
+  .menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;text-align:left;font-size:14px;color:var(--ink)}
+  .menu-item .i{width:16px;height:16px;color:var(--mute)}
+  .menu-item:hover,.menu-item:focus-visible{background:var(--sunk);outline:none}
+  .menu-item.danger,.menu-item.danger .i{color:var(--bad-fg)}
+  .menu-sep{height:1px;background:var(--line);margin:5px 4px}
+  .popover{position:absolute;width:280px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-pop);animation:pop .12s ease;z-index:5;display:flex;flex-direction:column;gap:12px}
+  .toast{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 32px);padding:11px 16px;border-radius:11px;background:#16201b;color:#fff;font-size:14px;box-shadow:var(--sh-pop);animation:up .22s ease;z-index:9}
+  .toast .i{color:#6fd49d}
+  @keyframes fade{from{opacity:0}}
+  @keyframes slide{from{transform:translateX(40px);opacity:0}}
+  @keyframes pop{from{opacity:0;scale:.97}}
+  @keyframes up{from{opacity:0;translate:0 10px}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes flash{0%,40%{box-shadow:0 0 0 3px rgba(23,100,62,.3)}100%{box-shadow:var(--sh)}}
+  .flash{animation:flash 1.6s ease}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- formulários ---------- */
+  .form{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+  .fld label,.fld .flabel{display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:var(--ink-2)}
+  .fld .opt{color:var(--faint);font-weight:400}
+  .fld input:not([type=checkbox]):not([type=radio]),.fld select,.fld textarea{width:100%;min-height:42px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;background-color:var(--surface);font-size:14.5px;transition:border-color .15s,box-shadow .15s}
+  .fld textarea{padding:10px 12px;min-height:84px;resize:vertical;line-height:1.5}
+  .fld [aria-invalid="true"]{border-color:var(--bad-fg)!important;background:#fffafa!important}
+  .help{margin:6px 0 0;font-size:12.5px;color:var(--mute)}
+  .err{margin:6px 0 0;font-size:12.5px;font-weight:500;color:var(--bad-fg)}
+  .err:empty{display:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @container dr (max-width:439px){ .grid2{grid-template-columns:1fr} }
+  @container app (max-width:559px){ .card .grid2{grid-template-columns:1fr} }
+  .suffix{position:relative} .suffix input{padding-right:40px!important} .suffix span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--mute)}
+  .section-t{margin:6px 0 -4px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+  .radios{display:flex;flex-wrap:wrap;gap:8px}
+  .radios label{margin:0;position:relative}
+  .radios input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;width:100%;height:100%}
+  .radios span{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px;border:1px solid var(--line-2);border-radius:999px;font-size:13.5px;font-weight:500;color:var(--ink-2);background:var(--surface)}
+  .radios input:checked+span{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:600}
+  .radios input:focus-visible+span{box-shadow:0 0 0 3px rgba(23,100,62,.18)}
+  .pick-img{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .pick-img label{position:relative;display:block;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;margin:0}
+  .pick-img input{position:absolute;opacity:0}
+  .pick-img svg{display:block;width:100%;height:100%}
+  .pick-img input:checked+svg{outline:2px solid var(--green);outline-offset:-2px}
+  .pick-img label:has(input:checked){border-color:var(--green)}
+  .pick-img label:has(input:focus-visible){box-shadow:0 0 0 3px rgba(23,100,62,.25)}
+  .chip-input{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .chip-x{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 4px 0 10px;border-radius:8px;background:var(--sunk);border:1px solid var(--line);font-size:13px}
+  .chip-x button{display:grid;place-items:center;width:20px;height:20px;border:0;border-radius:5px;background:none;color:var(--mute);padding:0}
+  .chip-x button:hover{color:var(--bad-fg)}
+  .addrow{display:flex;gap:8px}
+  .addrow input{flex:1;min-width:0}
+  .apply-opt{border:1px solid var(--line);border-radius:10px;padding:12px}
+  .apply-opt>label{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;cursor:pointer}
+  .apply-opt .apply-body{margin-top:10px;padding-left:28px}
+  .apply-opt:has(> label input:not(:checked)) .apply-body{opacity:.45;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="chrome">
+    <h2>Módulo 3 · Clientes e locais — simulação</h2>
+    <label>Aplicação AppOS
+      <select id="appSel" aria-label="Configuração da aplicação AppOS">
+        <option value="limpezas">Limpezas</option>
+        <option value="formacao">Formação</option>
+        <option value="manutencao">Manutenção</option>
+        <option value="nucleo">Núcleo (genérico)</option>
+      </select>
+    </label>
+    <div class="seg w-seg" role="group" aria-label="Largura de pré-visualização" id="widthSeg">
+      <button type="button" data-w="390" aria-pressed="false">Telemóvel</button>
+      <button type="button" data-w="768" aria-pressed="false">Tablet</button>
+      <button type="button" data-w="full" aria-pressed="true">Desktop</button>
+    </div>
+    <button type="button" class="reset" id="resetBtn">Repor dados</button>
+  </div>
+
+  <div class="stage" id="stage" data-w="full">
+    <div class="device" id="device">
+      <div class="viewport" id="viewport">
+        <header class="topbar">
+          <a class="logo" href="#" data-act="nav" data-label="Início">App<span>OS</span></a>
+          <nav class="nav" aria-label="Principal">
+            <a href="#" data-act="nav" data-label="Hoje">Hoje</a>
+            <a href="#" data-act="nav" data-label="Planeamento">Planeamento</a>
+            <a href="#" data-act="nav" data-label="Equipas">Equipas</a>
+            <a href="#" aria-current="page" data-act="go-clients">Clientes</a>
+            <a href="#" data-act="nav" data-label="Rendimentos">Rendimentos</a>
+          </nav>
+          <div class="tb-right">
+            <button type="button" class="chip-mod" data-act="area" id="appChip">✦ Limpezas</button>
+            <span class="av" title="Paula Santos" aria-hidden="true">PS</span>
+            <button type="button" class="icon-btn" data-act="app-menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" id="appMenuBtn"></button>
+          </div>
+        </header>
+        <main class="page" id="page"></main>
+      </div>
+      <div class="layer" id="layer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   Utilitários
+   ========================================================= */
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function norm(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function uid(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function nowLabel(){ var d = new Date(); return 'Hoje, ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function euro(v){ return v == null || v === '' || isNaN(v) ? '—' : Number(v).toFixed(2).replace('.', ',') + ' €'; }
+function plural(n, s, p){ return n + ' ' + (n === 1 ? s : p); }
+function cityOf(address){ var m = /\d{4}-\d{3}\s+(.+)$/.exec(address || ''); return m ? m[1].trim() : ''; }
+
+var ICONS = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
+  more:'<circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  back:'<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  chevD:'<path d="m6 9 6 6 6-6"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+  home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  pin:'<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  idcard:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 13h3"/>',
+  receipt:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2"/>',
+  doc:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  link:'<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  refresh:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>',
+  check:'<path d="m5 12 5 5 9-10"/>',
+  shirt:'<path d="M8 3 4 5.5 2 10l3 1.5V21h14v-9.5L22 10l-2-4.5L16 3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  pause:'<path d="M9 5v14M15 5v14"/>',
+  play:'<path d="M7 5v14l11-7z"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+  filter:'<path d="M4 5h16M7 12h10M10 19h4"/>',
+  building:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>'
+};
+function ic(name, cls){
+  return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+}
+
+/* ---- ilustrações (substituem fotografias nesta fase) ---- */
+function windows(x0, y0, cols, rows, dx, dy, w, h, fill){
+  var s = '';
+  for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++)
+    s += '<rect x="' + (x0 + c * dx) + '" y="' + (y0 + r * dy) + '" width="' + w + '" height="' + h + '" fill="' + fill + '" stroke="#fff" stroke-width="2.5"/>';
+  return s;
+}
+var ART = {
+  facade: function(){
+    return '<rect width="320" height="200" fill="#d8e7f1"/>' +
+      '<rect x="0" y="46" width="62" height="160" fill="#c7d6c2"/>' + windows(10, 62, 2, 4, 26, 34, 14, 22, '#7b8f8a') +
+      '<rect x="258" y="36" width="62" height="170" fill="#e7cbb4"/>' + windows(268, 52, 2, 4, 26, 34, 14, 22, '#8b7a6c') +
+      '<rect x="62" y="18" width="196" height="190" fill="#efe6d6"/><rect x="56" y="12" width="208" height="10" fill="#d6c7ad"/>' +
+      windows(80, 36, 4, 4, 46, 40, 24, 30, '#55697b') +
+      '<rect x="74" y="70" width="176" height="3" fill="#3b4148"/><rect x="74" y="110" width="176" height="3" fill="#3b4148"/>' +
+      '<rect x="146" y="168" width="28" height="40" fill="#6d4c35"/>';
+  },
+  facade2: function(){
+    return '<rect width="320" height="200" fill="#dfeaf2"/>' +
+      '<rect x="0" y="30" width="70" height="170" fill="#9fb8cc"/>' + windows(12, 46, 2, 4, 28, 36, 16, 24, '#e9eef2') +
+      '<rect x="70" y="14" width="180" height="190" fill="#f1ddd2"/><rect x="64" y="8" width="192" height="10" fill="#d9bfb0"/>' +
+      windows(90, 34, 3, 4, 56, 40, 28, 30, '#5d6c78') +
+      '<rect x="84" y="68" width="152" height="3" fill="#353b41"/><rect x="84" y="148" width="152" height="3" fill="#353b41"/>' +
+      '<rect x="250" y="44" width="70" height="160" fill="#efe9dc"/>' + windows(262, 60, 2, 4, 28, 34, 16, 22, '#8a8f93') +
+      '<rect x="146" y="168" width="28" height="36" fill="#4b5a3f"/>';
+  },
+  house: function(){
+    return '<rect width="320" height="200" fill="#cfe5f2"/><circle cx="262" cy="42" r="16" fill="#fbeab5"/>' +
+      '<rect y="118" width="320" height="40" fill="#79b3d3"/><rect y="150" width="320" height="50" fill="#eadcbc"/>' +
+      '<polygon points="80,78 165,36 250,78" fill="#c9774f"/><rect x="92" y="76" width="146" height="82" fill="#fbfaf6"/>' +
+      '<rect x="110" y="94" width="30" height="26" fill="#6ea4c2" stroke="#fff" stroke-width="3"/><rect x="190" y="94" width="30" height="26" fill="#6ea4c2" stroke="#fff" stroke-width="3"/>' +
+      '<rect x="152" y="112" width="26" height="46" fill="#5f7f94"/><rect x="92" y="150" width="146" height="4" fill="#d7cfbf"/>';
+  },
+  living: function(){
+    return '<rect width="320" height="200" fill="#ede8df"/><rect y="152" width="320" height="48" fill="#cdb697"/>' +
+      '<rect x="26" y="26" width="92" height="104" fill="#f7fbfd" stroke="#fff" stroke-width="6"/><path d="M72 26v104M26 78h92" stroke="#ddd6cb" stroke-width="3"/>' +
+      '<rect x="150" y="104" width="142" height="50" rx="9" fill="#9aa3a8"/><rect x="158" y="92" width="58" height="30" rx="7" fill="#b3bbbf"/><rect x="224" y="92" width="58" height="30" rx="7" fill="#b3bbbf"/>' +
+      '<rect x="248" y="40" width="36" height="46" fill="#cfd8d3" stroke="#fff" stroke-width="3"/>' +
+      '<ellipse cx="120" cy="178" rx="80" ry="12" fill="#bfa987"/><rect x="128" y="36" width="4" height="70" fill="#8e877c"/><path d="M116 36h28l-6 14h-16z" fill="#f3e6cc"/>';
+  },
+  bedroom: function(){
+    return '<rect width="320" height="200" fill="#eee8df"/><rect y="160" width="320" height="40" fill="#c9b293"/>' +
+      '<rect x="244" y="18" width="60" height="118" fill="#f6f9fb" stroke="#fff" stroke-width="5"/><rect x="236" y="14" width="18" height="130" fill="#d4c7b3"/><rect x="298" y="14" width="18" height="130" fill="#d4c7b3"/>' +
+      '<rect x="70" y="72" width="150" height="46" rx="4" fill="#d7c2a2"/><rect x="60" y="112" width="170" height="52" rx="4" fill="#ffffff" stroke="#e2dbd0"/>' +
+      '<rect x="80" y="100" width="56" height="20" rx="6" fill="#f7f4ee" stroke="#e2dbd0"/><rect x="152" y="100" width="56" height="20" rx="6" fill="#f7f4ee" stroke="#e2dbd0"/>' +
+      '<rect x="60" y="138" width="170" height="26" fill="#b9c9bd"/><rect x="24" y="126" width="30" height="36" fill="#bda27f"/><path d="M30 104h18l-4 22h-10z" fill="#f2e3c5"/>';
+  }
+};
+function art(kind){ return '<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + (ART[kind] || ART.facade)() + '</svg>'; }
+
+/* =========================================================
+   Configuração por aplicação AppOS
+   Estrutura comum: Cliente → Local de serviço → Unidade.
+   Cada aplicação define terminologia, campos próprios e regras.
+   ========================================================= */
+var APPS = {
+  limpezas: {
+    label:'Limpezas',
+    loc:{s:'Alojamento', p:'Alojamentos', g:'m'},
+    unit:{s:'Unidade', p:'Unidades', g:'f', hint:'Apartamento ou quarto', types:['Apartamento','Quarto','Estúdio'], capacity:'Hóspedes'},
+    jobs:'Reservas',
+    segments:['Alojamento Local','Gestão de Imóveis','Hotelaria','Particular'],
+    services:[['estadia','Limpeza de estadia','ok'],['profunda','Limpeza profunda','info'],['checkin','Check-in / check-out','neutral']],
+    detailSub:'Configura as unidades, equipa e preferências deste alojamento.',
+    // Campos adicionais só desta aplicação — não universais.
+    features:{team:true, rate:true, ical:true, laundry:true}
+  },
+  formacao: {
+    label:'Formação',
+    loc:{s:'Instalação', p:'Instalações', g:'f'},
+    unit:{s:'Sala', p:'Salas', g:'f', hint:'Turma, sala ou sessão', types:['Sala','Auditório','Laboratório'], capacity:'Lugares'},
+    jobs:'Sessões',
+    segments:['Empresa','Escola','Entidade formadora'],
+    services:[['presencial','Formação presencial','ok'],['logistica','Apoio logístico','info'],['equip','Equipamento audiovisual','neutral']],
+    detailSub:'Configura as salas e preferências desta instalação.',
+    features:{}
+  },
+  manutencao: {
+    label:'Manutenção',
+    loc:{s:'Edifício', p:'Edifícios', g:'m'},
+    unit:{s:'Fração', p:'Frações', g:'f', hint:'Equipamento, fração ou área', types:['Fração','Equipamento','Área comum'], capacity:'Área (m²)'},
+    jobs:'Intervenções',
+    segments:['Empresa','Condomínio','Proprietário'],
+    services:[['preventiva','Manutenção preventiva','ok'],['corretiva','Manutenção corretiva','info'],['inspecao','Inspeção','neutral']],
+    detailSub:'Configura as frações e preferências deste edifício.',
+    features:{}
+  },
+  nucleo: {
+    label:'AppOS',
+    loc:{s:'Local de serviço', p:'Locais de serviço', g:'m'},
+    unit:{s:'Unidade', p:'Unidades', g:'f', hint:'Subdivisão do local', types:['Unidade'], capacity:'Capacidade'},
+    jobs:'Trabalhos',
+    segments:['Empresa','Particular'],
+    services:[['s1','Serviço principal','ok'],['s2','Serviço complementar','info'],['s3','Serviço pontual','neutral']],
+    detailSub:'Configura as unidades e preferências deste local de serviço.',
+    features:{}
+  }
+};
+var A = APPS.limpezas;
+var lo = function(s){ return s.charAt(0).toLowerCase() + s.slice(1); };
+function novo(term){ return (term.g === 'f' ? 'Nova ' : 'Novo ') + lo(term.s); }
+function locCount(n){ return plural(n, lo(A.loc.s), lo(A.loc.p)); }
+function unitCount(n){ return plural(n, lo(A.unit.s), lo(A.unit.p)); }
+/** Serviços guardados por posição no catálogo — cada aplicação apresenta os seus nomes. */
+function servicesOf(loc){
+  return loc.services.map(function(i){ return A.services[i]; }).filter(Boolean);
+}
+
+var TEAMS = [{id:'norte', name:'Equipa Norte'}, {id:'centro', name:'Equipa Centro'}, {id:'sul', name:'Equipa Sul'}];
+var LAUNDRY = [['lencol','Lençol baixo'],['edredon','Capa de edredon'],['fronhas','Fronhas'],['banho','Toalhas de banho'],['rosto','Toalhas de rosto']];
+var BILLING = ['Semanal','Quinzenal','Mensal','Por serviço'];
+var CLIENT_STATUS = {active:['ok','Ativo'], paused:['warn','Pausado'], inactive:['dark','Inativo']};
+var PAYMENT = {ok:['ok','Em dia'], pending:['warn','Pendente'], late:['bad','Em atraso']};
+var LOC_STATUS = {active:['ok','Ativo'], paused:['warn','Pausado']};
+var ICAL = {connected:['ok','Ligado'], error:['bad','Erro na ligação'], none:['dark','Não sincronizado']};
+var PLATFORMS = ['Airbnb','Booking.com','Vrbo','Outro'];
+function teamName(id){ var t = TEAMS.find(function(t){ return t.id === id; }); return t ? t.name : 'Sem equipa'; }
+function qtyTotal(q){ return q ? LAUNDRY.reduce(function(s, it){ return s + (Number(q[it[0]]) || 0); }, 0) : 0; }
+function pill(tuple, dot){ return '<span class="pill ' + tuple[0] + (dot ? ' dot' : '') + '">' + esc(tuple[1]) + '</span>'; }
+
+/* =========================================================
+   Dados de demonstração (sem persistência)
+   ========================================================= */
+function seed(){
+  var q = function(a, b, c, d, e){ return {lencol:a, edredon:b, fronhas:c, banho:d, rosto:e}; };
+  // Calendário iCal de uma unidade (uma unidade pode ter vários em simultâneo).
+  var C = function(id, platform, url, status, lastSync, imported){ return {id:id, platform:platform, url:url, status:status, lastSync:lastSync, imported:imported}; };
+  var U = function(id, name, type, capacity, laundry, calendars, extra){
+    return Object.assign({id:id, name:name, type:type, capacity:capacity, status:'active', team:null, rate:null, laundry:laundry, calendars:calendars || []}, extra || {});
+  };
+  var AIR = 'https://www.airbnb.pt/calendar/ical/', BOOK = 'https://admin.booking.com/hotel/hoteladmin/ical.html?t=';
+  return {
+    clients: [
+      {id:'c1', name:'Porto Charming Suites', segment:'Alojamento Local', nif:'510123457', contact:'Ana Ribeiro', email:'ana@portocharming.pt', phone:'+351 912 345 678',
+       address:'Rua de Cedofeita 200, 4050-174 Porto', billing:'Mensal', payment:'ok', status:'active', img:'facade', since:'fev 2024',
+       notes:'Check-outs até às 11h. Preferem contacto por WhatsApp.'},
+      {id:'c2', name:'Maternidade 50', segment:'Gestão de Imóveis', nif:'514876212', contact:'Carlos Mendes', email:'carlos@maternidade50.pt', phone:'+351 913 222 111',
+       address:'Rua da Maternidade 50, 4050-371 Porto', billing:'Quinzenal', payment:'pending', status:'active', img:'facade2', since:'set 2024', notes:''},
+      {id:'c3', name:'Casa da Praia', segment:'Alojamento Local', nif:'516234986', contact:'Sofia Costa', email:'sofia@casadapraia.pt', phone:'+351 914 555 333',
+       address:'Avenida da Praia 12, 4405-693 Vila Nova de Gaia', billing:'Por serviço', payment:'ok', status:'paused', img:'house', since:'mai 2025',
+       notes:'Temporada fechada até maio.'},
+      {id:'c4', name:'Rui Almeida', segment:'Particular', nif:'', contact:'Rui Almeida', email:'rui.almeida@email.pt', phone:'+351 916 204 118',
+       address:'Rua do Passeio Alegre 480, 4150-570 Porto', billing:'Por serviço', payment:'ok', status:'active', img:'living', since:'jan 2026',
+       notes:'Apartamento inteiro: o alojamento e a unidade coincidem.'}
+    ],
+    locations: [
+      {id:'l1', clientId:'c1', name:'Rosário 123', address:'Rua do Rosário 123, 4050-521 Porto', status:'active', img:'living',
+       team:'centro', rate:18, services:[0], laundryOn:true, laundryQty:q(2,2,4,2,2),
+       access:'Cofre de chaves à entrada · código 4821', notes:'Aspirador no arrumo do piso 0.',
+       units:[
+         U('u1','AP 1 Frente','Apartamento',4,q(2,2,4,2,2),[C('k1','Airbnb',AIR+'48213377.ics','connected','Hoje, 09:12',9), C('k2','Booking.com',BOOK+'a81f20','connected','Hoje, 09:12',5)]),
+         U('u2','AP 2 Piso','Apartamento',4,q(2,2,4,2,2),[C('k3','Airbnb',AIR+'48213391.ics','connected','Hoje, 09:12',7)]),
+         U('u3','AP 3 Traseiras','Apartamento',2,q(1,1,2,2,2),[],{rate:20})]},
+      {id:'l2', clientId:'c1', name:'Cedofeita 88', address:'Rua de Cedofeita 88, 4050-174 Porto', status:'active', img:'bedroom',
+       team:'norte', rate:16, services:[0,1], laundryOn:false, laundryQty:q(2,2,4,2,2), access:'', notes:'',
+       units:[
+         U('u4','Quarto 1','Quarto',2,null,[C('k4','Booking.com',BOOK+'c77d02','connected','Hoje, 08:30',4)]),
+         U('u5','Quarto 2','Quarto',2,null,[C('k5','Airbnb',AIR+'erro-50211.ics','error','Ontem, 18:40',0)])]},
+      {id:'l3', clientId:'c2', name:'Maternidade 50', address:'Rua da Maternidade 50, 4050-371 Porto', status:'active', img:'facade2',
+       team:'centro', rate:16, services:[0,1], laundryOn:true, laundryQty:q(1,1,2,2,2), access:'Porteiro das 8h às 20h.', notes:'',
+       units:[
+         U('u6','T1 Esquerdo','Apartamento',2,q(1,1,2,2,2),[C('k6','Booking.com',BOOK+'9f3c21','connected','Hoje, 07:55',6)]),
+         U('u7','T1 Direito','Apartamento',2,q(1,1,2,2,2),[C('k7','Airbnb',AIR+'39920417.ics','connected','Hoje, 07:55',8), C('k8','Vrbo','https://www.vrbo.com/icalendar/erro-7731.ics','error','Ontem, 18:40',0)]),
+         U('u8','T2 Recuado','Apartamento',4,null,[],{team:'norte'})]},
+      {id:'l4', clientId:'c3', name:'Casa da Praia Granja', address:'Avenida da Praia 12, 4405-693 Vila Nova de Gaia', status:'paused', img:'house',
+       team:'sul', rate:20, services:[0], laundryOn:false, laundryQty:q(2,2,4,4,2), access:'Chave com a vizinha do n.º 14.', notes:'',
+       units:[U('u9','Quarto Mar','Quarto',2,null,[C('k9','Airbnb',AIR+'59120044.ics','connected','10 abr, 08:00',3)]), U('u10','Quarto Jardim','Quarto',3,null)]},
+      // Alojamento que coincide com a unidade (apartamento inteiro).
+      {id:'l5', clientId:'c4', name:'Foz T1', address:'Rua do Passeio Alegre 480, 4150-570 Porto', status:'active', img:'bedroom',
+       team:'norte', rate:17, services:[0], laundryOn:false, laundryQty:q(2,2,4,2,2), access:'Código da porta 1908.', notes:'',
+       units:[U('u11','Foz T1','Apartamento',3,null,[C('k10','Airbnb',AIR+'61022810.ics','connected','Hoje, 09:40',11), C('k11','Booking.com',BOOK+'f0a912','connected','Hoje, 09:40',4)])]}
+    ]
+  };
+}
+var D = seed();
+var UI = {
+  app:'limpezas',
+  view:{name:'clients'},
+  fc:{q:'', status:'', city:'', segment:'', billing:'', payment:''},
+  sort:'name',
+  det:null        // edição do local aberto (rascunho)
+};
+
+function client(id){ return D.clients.find(function(c){ return c.id === id; }); }
+function location_(id){ return D.locations.find(function(l){ return l.id === id; }); }
+function locsOf(cid){ return D.locations.filter(function(l){ return l.clientId === cid; }); }
+function unitsOf(cid){ return locsOf(cid).reduce(function(n, l){ return n + l.units.length; }, 0); }
+
+/* ---- validação (NIF e telefone iguais ao Módulo 1) ---- */
+var NIF_1 = ['1','2','3','5','6','8','9'], NIF_2 = ['45','70','71','72','74','75','77','78','79','90','91','98','99'];
+function digits(v){ return String(v).replace(/\D/g, ''); }
+function isValidNIF(v){
+  var n = digits(v);
+  if (n.length !== 9 || (NIF_1.indexOf(n[0]) === -1 && NIF_2.indexOf(n.slice(0, 2)) === -1)) return false;
+  var s = 0; for (var i = 0; i < 8; i++) s += Number(n[i]) * (9 - i);
+  var r = s % 11; return (r < 2 ? 0 : 11 - r) === Number(n[8]);
+}
+function isValidPhone(v){ var d = digits(v); if (d.indexOf('351') === 0) d = d.slice(3); return d.length === 9 && /^[239]/.test(d); }
+function fmtNIF(v){ var d = digits(v); return d.length === 9 ? d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6) : v; }
+
+/* =========================================================
+   Camadas: menus, popovers, painéis, modais, toasts
+   ========================================================= */
+var device = $('#device'), viewport = $('#viewport'), layer = $('#layer'), page = $('#page');
+var stack = [], menuState = null;
+
+function toast(msg){
+  var old = $('.toast', layer); if (old) old.remove();
+  var t = document.createElement('div');
+  t.className = 'toast'; t.setAttribute('role', 'status');
+  t.innerHTML = ic('check') + '<span>' + esc(msg) + '</span>';
+  layer.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3400);
+}
+function closeMenu(){
+  if (!menuState) return;
+  menuState.el.remove(); menuState.anchor.setAttribute('aria-expanded', 'false'); menuState = null;
+}
+function place(el, anchor){
+  var dr = device.getBoundingClientRect(), ar = anchor.getBoundingClientRect();
+  var left = Math.max(8, Math.min(ar.right - dr.left - el.offsetWidth, dr.width - el.offsetWidth - 8));
+  var top = ar.bottom - dr.top + 6;
+  if (top + el.offsetHeight > dr.height - 8) top = ar.top - dr.top - el.offsetHeight - 6;
+  top = Math.max(8, Math.min(top, dr.height - el.offsetHeight - 8));
+  el.style.left = left + 'px'; el.style.top = top + 'px';
+}
+function openMenu(anchor, items){
+  var same = menuState && menuState.anchor === anchor;
+  closeMenu(); if (same) return;
+  var m = document.createElement('div');
+  m.className = 'menu'; m.setAttribute('role', 'menu');
+  m.innerHTML = items.map(function(it, i){
+    if (it === '-') return '<div class="menu-sep" role="separator"></div>';
+    return '<button type="button" role="menuitem" class="menu-item' + (it.danger ? ' danger' : '') + '" data-i="' + i + '">' + ic(it.icon) + esc(it.label) + '</button>';
+  }).join('');
+  layer.appendChild(m); place(m, anchor);
+  m.addEventListener('click', function(e){
+    var b = e.target.closest('[data-i]'); if (!b) return;
+    var it = items[+b.dataset.i]; closeMenu(); anchor.focus({preventScroll:true}); it.run();
+  });
+  m.addEventListener('keydown', function(e){
+    var btns = $$('.menu-item', m), i = btns.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown'){ e.preventDefault(); btns[(i + 1) % btns.length].focus(); }
+    if (e.key === 'ArrowUp'){ e.preventDefault(); btns[(i - 1 + btns.length) % btns.length].focus(); }
+  });
+  menuState = {el:m, anchor:anchor}; anchor.setAttribute('aria-expanded', 'true');
+  var f = m.querySelector('button'); if (f) f.focus({preventScroll:true});
+}
+function openPopover(anchor, html, onChange){
+  var same = menuState && menuState.anchor === anchor;
+  closeMenu(); if (same) return;
+  var p = document.createElement('div');
+  p.className = 'popover'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Mais filtros');
+  p.innerHTML = html; layer.appendChild(p); place(p, anchor);
+  p.addEventListener('change', function(e){ onChange(e, p); });
+  p.addEventListener('click', function(e){ if (e.target.closest('[data-pop-clear]')) onChange(e, p); });
+  menuState = {el:p, anchor:anchor}; anchor.setAttribute('aria-expanded', 'true');
+  var f = p.querySelector('select'); if (f) f.focus({preventScroll:true});
+}
+function openDrawer(label){
+  closeMenu();
+  var bd = document.createElement('div'); bd.className = 'backdrop';
+  var el = document.createElement('aside');
+  el.className = 'drawer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', label);
+  layer.appendChild(bd); layer.appendChild(el);
+  var o = {el:el, bd:bd, ret:document.activeElement, redraw:null};
+  bd.addEventListener('click', function(){ closeOverlay(o); });
+  stack.push(o);
+  return o;
+}
+/** Modal simples ou com formulário. `run` devolve false para manter aberto. */
+function openModal(opt){
+  closeMenu();
+  var bd = document.createElement('div'); bd.className = 'backdrop';
+  var el = document.createElement('div');
+  el.className = 'modal' + (opt.wide ? ' wide' : ''); el.setAttribute('role', opt.form ? 'dialog' : 'alertdialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'mdlT');
+  el.innerHTML = '<div class="modal-body"><h2 id="mdlT">' + esc(opt.title) + '</h2>' + (opt.body ? '<p class="m-sub">' + opt.body + '</p>' : '') + (opt.form || '') + '</div>' +
+    '<div class="acts"><button type="button" class="btn btn-outline" data-m="no">' + esc(opt.cancel || 'Cancelar') + '</button>' +
+    '<button type="button" class="btn ' + (opt.danger ? 'btn-danger-solid' : 'btn-primary') + '" data-m="yes">' + esc(opt.confirm) + '</button></div>';
+  layer.appendChild(bd); layer.appendChild(el);
+  var o = {el:el, bd:bd, ret:document.activeElement};
+  stack.push(o);
+  bd.addEventListener('click', function(){ closeOverlay(o); });
+  el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-m]'); if (!b) return;
+    if (b.dataset.m === 'no'){ closeOverlay(o); if (opt.onCancel) opt.onCancel(); return; }
+    if (opt.run && opt.run(el) === false) return;
+    closeOverlay(o);
+  });
+  if (opt.mount) opt.mount(el);
+  var first = opt.form ? el.querySelector('input:not([type=checkbox]),select') : $('[data-m="yes"]', el);
+  (first || $('[data-m="yes"]', el)).focus();
+  return o;
+}
+function confirmDlg(title, body, confirm, run, danger){ openModal({title:title, body:body, confirm:confirm, danger:danger !== false, run:function(){ run(); }}); }
+function closeOverlay(o){
+  var i = stack.indexOf(o); if (i < 0) return;
+  stack.splice(i, 1); o.el.remove(); o.bd.remove();
+  if (o.ret && o.ret.isConnected) o.ret.focus({preventScroll:true});
+}
+function closeAll(){ closeMenu(); while (stack.length) closeOverlay(stack[stack.length - 1]); }
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){
+    if (menuState){ var a = menuState.anchor; closeMenu(); a.focus(); return; }
+    if (stack.length) closeOverlay(stack[stack.length - 1]);
+  }
+  if (e.key === 'Tab' && stack.length){
+    var top = stack[stack.length - 1].el;
+    var f = $$('button:not([disabled]),input:not([type=hidden]),select,textarea,[href],[tabindex="0"]', top).filter(function(x){ return x.offsetParent !== null; });
+    if (!f.length) return;
+    if (e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[f.length - 1]){ e.preventDefault(); f[0].focus(); }
+    else if (!top.contains(document.activeElement)){ e.preventDefault(); f[0].focus(); }
+  }
+});
+document.addEventListener('mousedown', function(e){
+  if (menuState && !menuState.el.contains(e.target) && !menuState.anchor.contains(e.target)) closeMenu();
+});
+viewport.addEventListener('scroll', function(){ if (menuState && !menuState.el.classList.contains('popover')) closeMenu(); }, {passive:true});
+window.addEventListener('resize', closeMenu);
+
+/* ---- campos ---- */
+function fld(id, label, control, opts){
+  opts = opts || {};
+  return '<div class="fld"' + (opts.style ? ' style="' + opts.style + '"' : '') + '><label for="' + id + '">' + label + (opts.optional ? ' <span class="opt">(opcional)</span>' : '') + '</label>' + control +
+    (opts.help ? '<p class="help">' + opts.help + '</p>' : '') + '<p class="err" data-err="' + id + '" role="alert"></p></div>';
+}
+function radios(name, list, val){
+  return '<div class="radios">' + list.map(function(o){
+    return '<label><input type="radio" name="' + name + '" value="' + esc(o[0]) + '"' + (o[0] === val ? ' checked' : '') + '><span>' + esc(o[1]) + '</span></label>';
+  }).join('') + '</div>';
+}
+function opts(list, val){ return list.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join(''); }
+function showErrs(root, errs){
+  $$('[data-err]', root).forEach(function(el){
+    var id = el.dataset.err, input = root.querySelector('#' + id);
+    el.textContent = errs[id] || '';
+    if (input){ if (errs[id]) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid'); }
+  });
+  var first = Object.keys(errs)[0];
+  if (first){ var f = root.querySelector('#' + first); if (f) f.focus(); }
+  return !first;
+}
+
+/* =========================================================
+   Navegação entre ecrãs
+   ========================================================= */
+function isDirty(){ return !!(UI.det && JSON.stringify(UI.det.draft) !== UI.det.orig); }
+function go(view, force){
+  if (!force && UI.view.name === 'location' && isDirty()){
+    confirmDlg('Sair sem guardar?', 'Tens alterações por guardar neste ' + lo(A.loc.s) + '. Se saíres agora, perdem-se.', 'Sair sem guardar', function(){ go(view, true); });
+    return;
+  }
+  closeAll();
+  if (view.name === 'location'){
+    var loc = location_(view.locId);
+    UI.det = {locId:loc.id, draft:clone(loc), orig:JSON.stringify(loc), sel:loc.units.map(function(u){ return u.id; }), apply:true, tab:view.tab || 'config', syncing:false};
+  } else UI.det = null;
+  UI.view = view;
+  render();
+  viewport.scrollTop = 0;
+}
+function crumbs(parts){
+  return '<nav class="crumbs" aria-label="Localização">' + parts.map(function(p, i){
+    var last = i === parts.length - 1;
+    return (i ? '<span class="sep" aria-hidden="true">/</span>' : '') +
+      (last ? '<span aria-current="page">' + esc(p.label) + '</span>' : '<button type="button" data-act="' + p.act + '"' + (p.id ? ' data-id="' + p.id + '"' : '') + '>' + esc(p.label) + '</button>');
+  }).join('') + '</nav>';
+}
+function render(){
+  $('#appChip').textContent = '✦ ' + (UI.app === 'nucleo' ? 'AppOS' : A.label);
+  if (UI.view.name === 'clients') renderClients();
+  else if (UI.view.name === 'locations') renderLocations();
+  else renderDetail();
+}
+
+/* =========================================================
+   Ecrã: Clientes
+   ========================================================= */
+function renderClients(){
+  var f = UI.fc;
+  var cities = D.clients.map(function(c){ return cityOf(c.address); }).filter(function(c, i, a){ return c && a.indexOf(c) === i; }).sort();
+  var moreCount = ['segment','billing','payment'].filter(function(k){ return f[k]; }).length;
+  page.innerHTML =
+    '<section class="head"><div>' +
+      '<p class="eyebrow">' + esc(A.label) + ' · Clientes</p><h1>Clientes</h1>' +
+      '<p class="lede">Gere clientes, ' + lo(A.loc.p) + ' e ' + lo(A.unit.p) + '.</p></div>' +
+      '<div class="head-actions"><button type="button" class="btn btn-primary" data-act="new-client">' + ic('plus') + 'Novo cliente</button></div>' +
+    '</section>' +
+    '<div class="toolbar">' +
+      '<label class="search">' + ic('search') + '<span class="sr">Pesquisar</span><input class="ctl" type="search" data-fc="q" value="' + esc(f.q) + '" placeholder="Pesquisar clientes, contactos ou locais…"></label>' +
+      '<select class="ctl" data-fc="status" aria-label="Filtrar por estado">' + opts([['','Estado'],['active','Ativo'],['paused','Pausado'],['inactive','Inativo']], f.status) + '</select>' +
+      '<select class="ctl" data-fc="city" aria-label="Filtrar por cidade">' + opts([['','Cidade']].concat(cities.map(function(c){ return [c, c]; })), f.city) + '</select>' +
+      '<button type="button" class="ctl more" data-act="more-filters" aria-haspopup="dialog" aria-expanded="false">Mais filtros' + (moreCount ? '<span class="count">' + moreCount + '</span>' : ic('chevD')) + '</button>' +
+    '</div>' +
+    '<div class="listbar"><span id="clientCount"></span>' +
+      '<label>Ordenar por <select class="ctl" data-sort aria-label="Ordenar clientes">' +
+        opts([['name','Nome (A–Z)'],['name-desc','Nome (Z–A)'],['locs','Mais ' + lo(A.loc.p)],['units','Mais ' + lo(A.unit.p)]], UI.sort) + '</select></label></div>' +
+    '<div class="clist" id="clientRows"></div>';
+  renderClientRows();
+}
+function filteredClients(){
+  var f = UI.fc, q = norm(f.q);
+  var list = D.clients.filter(function(c){
+    if (f.status && c.status !== f.status) return false;
+    if (f.city && cityOf(c.address) !== f.city) return false;
+    if (f.segment && c.segment !== f.segment) return false;
+    if (f.billing && c.billing !== f.billing) return false;
+    if (f.payment && c.payment !== f.payment) return false;
+    if (!q) return true;
+    var hay = [c.name, c.contact, c.email, c.phone].concat(locsOf(c.id).map(function(l){ return l.name + ' ' + l.address; })).join(' ');
+    return norm(hay).indexOf(q) !== -1;
+  });
+  var by = {
+    'name': function(a, b){ return a.name.localeCompare(b.name, 'pt'); },
+    'name-desc': function(a, b){ return b.name.localeCompare(a.name, 'pt'); },
+    'locs': function(a, b){ return locsOf(b.id).length - locsOf(a.id).length || a.name.localeCompare(b.name, 'pt'); },
+    'units': function(a, b){ return unitsOf(b.id) - unitsOf(a.id) || a.name.localeCompare(b.name, 'pt'); }
+  };
+  return list.sort(by[UI.sort]);
+}
+function renderClientRows(){
+  var box = $('#clientRows'); if (!box) return;
+  var list = filteredClients();
+  $('#clientCount').textContent = list.length === D.clients.length ? plural(list.length, 'cliente', 'clientes') : list.length + ' de ' + plural(D.clients.length, 'cliente', 'clientes');
+  box.innerHTML = list.length ? list.map(function(c){
+    var nl = locsOf(c.id).length, nu = unitsOf(c.id);
+    return '<article class="crow" data-client="' + c.id + '" tabindex="0" aria-label="Abrir ' + esc(c.name) + '">' +
+      '<div class="thumb">' + art(c.img) + '</div>' +
+      '<div class="c-name"><b>' + esc(c.name) + '</b><small>' + esc(c.segment) + '</small></div>' +
+      '<div class="c-contact">' + ic('user') + '<div style="min-width:0"><b>' + esc(c.contact) + '</b><span>' + esc(c.email) + '</span><span>' + esc(c.phone) + '</span></div></div>' +
+      '<div class="c-count loc">' + ic('home') + '<b>' + nl + '</b><small>' + (nl === 1 ? lo(A.loc.s) : lo(A.loc.p)) + '</small></div>' +
+      '<div class="c-count unit">' + ic('grid') + '<b>' + nu + '</b><small>' + (nu === 1 ? lo(A.unit.s) : lo(A.unit.p)) + '</small></div>' +
+      '<div class="c-status">' + pill(CLIENT_STATUS[c.status]) + '</div>' +
+      '<div class="c-act"><button type="button" class="icon-btn" data-act="menu-client" data-id="' + c.id + '" aria-label="Mais opções para ' + esc(c.name) + '" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></div>' +
+    '</article>';
+  }).join('') : '<div class="empty"><b>Nenhum cliente encontrado</b>Ajusta a pesquisa ou os filtros. <button type="button" class="link" data-act="clear-filters">Limpar filtros</button></div>';
+}
+function clientMenu(anchor, c){
+  openMenu(anchor, [
+    {label:'Ver detalhe', icon:'eye', run:function(){ openClient(c.id); }},
+    {label:'Ver ' + lo(A.loc.p), icon:'home', run:function(){ go({name:'locations', clientId:c.id}); }},
+    {label:'Editar cliente', icon:'edit', run:function(){ openClientForm(c.id); }},
+    {label:'Ver ' + lo(A.jobs), icon:'cal', run:function(){ seeJobs(c); }},
+    '-',
+    c.status === 'paused'
+      ? {label:'Reativar cliente', icon:'play', run:function(){ c.status = 'active'; render(); toast(c.name + ' reativado.'); }}
+      : {label:'Pausar cliente', icon:'pause', run:function(){ c.status = 'paused'; render(); toast(c.name + ' pausado.'); }}
+  ]);
+}
+function seeJobs(c){ toast(A.jobs + ' de ' + c.name + ': lista filtrada por cliente numa fase seguinte.'); }
+function moreFilters(anchor){
+  var f = UI.fc;
+  openPopover(anchor,
+    '<div class="fld"><label for="pf-seg">Segmento</label><select id="pf-seg" data-pf="segment">' + opts([['','Todos']].concat(A.segments.concat(D.clients.map(function(c){ return c.segment; })).filter(function(s, i, a){ return a.indexOf(s) === i; }).map(function(s){ return [s, s]; })), f.segment) + '</select></div>' +
+    '<div class="fld"><label for="pf-bill">Período de pagamento</label><select id="pf-bill" data-pf="billing">' + opts([['','Todos']].concat(BILLING.map(function(b){ return [b, b]; })), f.billing) + '</select></div>' +
+    '<div class="fld"><label for="pf-pay">Estado de pagamento</label><select id="pf-pay" data-pf="payment">' + opts([['','Todos'],['ok','Em dia'],['pending','Pendente'],['late','Em atraso']], f.payment) + '</select></div>' +
+    '<button type="button" class="link" data-pop-clear style="align-self:flex-start">Limpar estes filtros</button>',
+    function(e, p){
+      if (e.target.closest('[data-pop-clear]')){ f.segment = f.billing = f.payment = ''; $$('select', p).forEach(function(s){ s.value = ''; }); }
+      else if (e.target.dataset.pf) f[e.target.dataset.pf] = e.target.value;
+      var n = ['segment','billing','payment'].filter(function(k){ return f[k]; }).length;
+      anchor.innerHTML = 'Mais filtros' + (n ? '<span class="count">' + n + '</span>' : ic('chevD'));
+      renderClientRows();
+    });
+}
+
+/* ---- detalhe do cliente (painel lateral) ---- */
+function openClient(id, tab){
+  var st = {id:id, tab:tab || 'summary'};
+  var o = openDrawer('Detalhe do cliente');
+  function draw(){
+    var c = client(st.id); if (!c){ closeOverlay(o); return; }
+    var locs = locsOf(c.id), nu = unitsOf(c.id);
+    var tabs = [['summary','Resumo'],['locs', A.loc.p + ' (' + locs.length + ')'],['units', A.unit.p + ' (' + nu + ')'],['notes','Notas']];
+    var body;
+    if (st.tab === 'summary'){
+      body = '<div class="box"><div class="box-h"><h3>Informação do cliente</h3></div><dl class="info-list">' +
+        info('user', 'Pessoa de contacto', esc(c.contact)) + info('mail', 'Email', esc(c.email)) + info('phone', 'Telefone', esc(c.phone || '—')) +
+        info('idcard', 'NIF', c.nif ? esc(fmtNIF(c.nif)) : '—') + info('pin', 'Morada', esc(c.address || '—')) +
+        info('receipt', 'Período de faturação', esc(c.billing)) + info('wallet', 'Estado de pagamento', pill(PAYMENT[c.payment])) +
+      '</dl></div>' +
+      '<div class="totals"><div class="mini"><b>' + locs.length + '</b><span>' + (locs.length === 1 ? A.loc.s : A.loc.p) + '</span></div><div class="mini"><b>' + nu + '</b><span>' + (nu === 1 ? A.unit.s : A.unit.p) + '</span></div></div>' +
+      '<p class="help" style="margin-top:12px">Cliente desde ' + esc(c.since) + '.</p>';
+    } else if (st.tab === 'locs'){
+      body = '<div class="box">' + (locs.length ? locs.map(function(l){
+        return '<div class="mloc"><div class="thumb">' + art(l.img) + '</div><div class="grow"><b>' + esc(l.name) + '</b><small>' + esc(l.address) + '</small><small>' + unitCount(l.units.length) + '</small></div>' +
+          pill(LOC_STATUS[l.status]) + '<button type="button" class="btn btn-outline btn-sm" data-d="manage" data-id="' + l.id + '">Gerir</button></div>';
+      }).join('') : '<p class="muted">Ainda sem ' + lo(A.loc.p) + '.</p>') + '</div>' +
+      '<div style="margin-top:12px"><button type="button" class="link" data-d="locations">Abrir ' + lo(A.loc.p) + ' do cliente</button></div>';
+    } else if (st.tab === 'units'){
+      body = locs.length ? locs.map(function(l){
+        return '<div class="ugroup box"><h4>' + esc(l.name) + '</h4><div class="uchips">' + (l.units.length ? l.units.map(function(u){
+          return '<span class="uchip">' + esc(u.name) + ' <small>' + esc(u.type) + '</small>' + (A.features.ical ? calChips(u, true) : '') + '</span>';
+        }).join('') : '<span class="muted">Sem ' + lo(A.unit.p) + '.</span>') + '</div></div>';
+      }).join('') : '<p class="muted" style="margin-top:14px">Sem ' + lo(A.unit.p) + '.</p>';
+    } else {
+      body = '<div class="box"><div class="box-h">' + ic('doc') + '<h3>Notas</h3></div>' + (c.notes ? '<p style="margin:4px 0 0;white-space:pre-wrap">' + esc(c.notes) + '</p>' : '<p class="muted">Sem notas. Usa “Editar cliente” para adicionar.</p>') + '</div>';
+    }
+    o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+      '<div class="dr-scroll">' +
+        '<div class="c-head"><div class="thumb">' + art(c.img) + '</div><div><h2>' + esc(c.name) + ' ' + pill(CLIENT_STATUS[c.status]) + '</h2><p>' + esc(c.segment) + '</p></div></div>' +
+        '<div class="subtabs" role="tablist">' + tabs.map(function(t){ return '<button type="button" role="tab" data-d="tab" data-tab="' + t[0] + '" aria-selected="' + (st.tab === t[0]) + '">' + esc(t[1]) + '</button>'; }).join('') + '</div>' +
+        body +
+      '</div>' +
+      '<div class="dr-foot">' +
+        '<button type="button" class="btn btn-outline" data-d="edit">' + ic('edit') + 'Editar cliente</button>' +
+        '<button type="button" class="btn btn-outline" data-d="jobs">' + ic('cal') + 'Ver ' + lo(A.jobs) + '</button>' +
+        '<button type="button" class="btn btn-primary" data-d="add-loc">' + ic('plus') + 'Adicionar ' + lo(A.loc.s) + '</button>' +
+      '</div>';
+  }
+  function info(icon, k, v){ return '<div><dt>' + ic(icon) + '<span>' + k + '</span></dt><dd>' + v + '</dd></div>'; }
+  o.redraw = draw; draw();
+  requestAnimationFrame(function(){ var c = $('.dr-close', o.el); if (c) c.focus({preventScroll:true}); });
+  o.el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    var c = client(st.id);
+    switch (b.dataset.d){
+      case 'close': closeOverlay(o); break;
+      case 'tab': st.tab = b.dataset.tab; draw(); $('[data-tab="' + st.tab + '"]', o.el).focus(); break;
+      case 'edit': openClientForm(c.id); break;
+      case 'jobs': seeJobs(c); break;
+      case 'add-loc': openLocationForm(c.id); break;
+      case 'locations': go({name:'locations', clientId:c.id}); break;
+      case 'manage': go({name:'location', clientId:c.id, locId:b.dataset.id}); break;
+    }
+  });
+}
+
+/* ---- criar/editar cliente: cliente e empresa no mesmo formulário ---- */
+function openClientForm(id){
+  var c = id ? client(id) : null;
+  var v = c ? clone(c) : {name:'', segment:A.segments[0], nif:'', contact:'', email:'', phone:'', address:'', billing:'Mensal', status:'active', notes:''};
+  var o = openDrawer(c ? 'Editar cliente' : 'Novo cliente');
+  var segs = A.segments.indexOf(v.segment) === -1 ? A.segments.concat([v.segment]) : A.segments;
+  o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+    '<form id="cfForm" novalidate style="display:contents"><div class="dr-scroll">' +
+      '<div class="dr-title"><p class="eyebrow">' + (c ? 'Cliente' : 'Novo cliente') + '</p><h2>' + (c ? esc(c.name) : 'Novo cliente') + '</h2>' +
+        '<p>Dados do cliente e da empresa no mesmo formulário.</p></div>' +
+      '<div class="form">' +
+        fld('cf-name', 'Nome', '<input id="cf-name" name="name" value="' + esc(v.name) + '" placeholder="Ex.: Porto Charming Suites" autocomplete="organization">', {help:'Nome comercial ou nome da pessoa.'}) +
+        '<div class="grid2">' +
+          fld('cf-segment', 'Segmento', '<select id="cf-segment" name="segment">' + opts(segs.map(function(s){ return [s, s]; }), v.segment) + '</select>') +
+          fld('cf-nif', 'NIF', '<input id="cf-nif" name="nif" inputmode="numeric" maxlength="11" value="' + esc(v.nif ? fmtNIF(v.nif) : '') + '" placeholder="123 456 789">', {optional:true}) +
+        '</div>' +
+        '<p class="section-t">Contacto</p>' +
+        fld('cf-contact', 'Pessoa de contacto', '<input id="cf-contact" name="contact" value="' + esc(v.contact) + '" autocomplete="name">') +
+        '<div class="grid2">' +
+          fld('cf-email', 'Email', '<input id="cf-email" name="email" type="email" value="' + esc(v.email) + '" placeholder="nome@empresa.pt">') +
+          fld('cf-phone', 'Telefone', '<input id="cf-phone" name="phone" type="tel" inputmode="tel" value="' + esc(v.phone) + '" placeholder="+351 912 345 678">', {optional:true}) +
+        '</div>' +
+        fld('cf-address', 'Morada', '<input id="cf-address" name="address" value="' + esc(v.address) + '" placeholder="Rua, n.º, código postal e localidade" autocomplete="street-address">', {optional:true}) +
+        '<p class="section-t">Faturação e estado</p>' +
+        '<div class="fld"><span class="flabel">Período de pagamento</span>' + radios('billing', BILLING.map(function(b){ return [b, b]; }), v.billing) + '</div>' +
+        '<div class="fld"><span class="flabel">Estado</span>' + radios('status', [['active','Ativo'],['paused','Pausado'],['inactive','Inativo']], v.status) + '</div>' +
+        fld('cf-notes', 'Notas', '<textarea id="cf-notes" name="notes" placeholder="Preferências, horários, contactos alternativos…">' + esc(v.notes) + '</textarea>', {optional:true}) +
+      '</div></div>' +
+      '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button><button type="submit" class="btn btn-primary">' + (c ? 'Guardar cliente' : 'Criar cliente') + '</button></div>' +
+    '</form>';
+  var fm = $('#cfForm', o.el);
+  requestAnimationFrame(function(){ $('#cf-name', o.el).focus(); });
+  o.el.addEventListener('click', function(e){ if (e.target.closest('[data-d="close"]')) closeOverlay(o); });
+  fm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var g = function(n){ return fm.elements[n].value.trim(); };
+    var val = {name:g('name'), segment:g('segment'), nif:digits(g('nif')), contact:g('contact'), email:g('email'), phone:g('phone'), address:g('address'),
+      billing:fm.querySelector('[name=billing]:checked').value, status:fm.querySelector('[name=status]:checked').value, notes:g('notes')};
+    var errs = {};
+    if (!val.name) errs['cf-name'] = 'Indica o nome do cliente.';
+    else if (D.clients.some(function(x){ return x !== c && norm(x.name) === norm(val.name); })) errs['cf-name'] = 'Já existe um cliente com este nome.';
+    if (val.nif && !isValidNIF(val.nif)) errs['cf-nif'] = 'NIF inválido. Confirma os 9 dígitos.';
+    if (!val.contact) errs['cf-contact'] = 'Indica a pessoa de contacto.';
+    if (!val.email) errs['cf-email'] = 'Indica o email.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val.email)) errs['cf-email'] = 'Email inválido. Ex.: nome@empresa.pt';
+    if (val.phone && !isValidPhone(val.phone)) errs['cf-phone'] = 'Telefone inválido. Ex.: +351 912 345 678';
+    if (!showErrs(fm, errs)) return;
+    var target = c || {id:uid('c'), payment:'ok', img:['facade','facade2','house'][D.clients.length % 3], since:'abr 2026'};
+    Object.assign(target, val);
+    if (!c) D.clients.push(target);
+    closeOverlay(o);
+    render();
+    stack.forEach(function(s){ if (s.redraw) s.redraw(); });
+    toast(c ? 'Cliente atualizado.' : target.name + ' criado.');
+    if (!c) openClient(target.id);
+  });
+}
+
+/* =========================================================
+   Ecrã: Locais de serviço do cliente (Alojamentos)
+   ========================================================= */
+function renderLocations(){
+  var c = client(UI.view.clientId);
+  if (!c){ go({name:'clients'}, true); return; }
+  var locs = locsOf(c.id);
+  page.innerHTML = crumbs([{label:'Clientes', act:'go-clients'}, {label:c.name}]) +
+    '<section class="head"><div>' +
+      '<p class="eyebrow">' + esc(A.loc.p) + ' do cliente</p><h1>' + esc(c.name) + '</h1>' +
+      '<p class="lede">' + locCount(locs.length) + ' · ' + unitCount(unitsOf(c.id)) + (c.status !== 'active' ? ' ' + pill(CLIENT_STATUS[c.status]) : '') + '</p></div>' +
+      '<div class="head-actions">' +
+        '<button type="button" class="btn btn-outline" data-act="go-clients">' + ic('back') + 'Voltar aos clientes</button>' +
+        '<button type="button" class="btn btn-primary" data-act="new-location" data-id="' + c.id + '">' + ic('plus') + esc(novo(A.loc)) + '</button>' +
+      '</div>' +
+    '</section>' +
+    '<div class="lgrid" id="locGrid">' + locs.map(locCard).join('') +
+      '<button type="button" class="lnew" data-act="new-location" data-id="' + c.id + '"><span class="plus">' + ic('plus') + '</span>' + esc(novo(A.loc)) + '</button>' +
+    '</div>';
+}
+function locCard(l){
+  var svcs = servicesOf(l).map(function(s){ return '<span class="svc ' + s[2] + '">' + esc(s[1]) + '</span>'; });
+  if (A.features.laundry && l.laundryOn) svcs.push('<span class="svc warn">Lavandaria</span>');
+  var facts = '';
+  if (A.features.team) facts += '<div><dt>' + ic('users') + '<span>Equipa por defeito</span></dt><dd>' + esc(teamName(l.team)) + '</dd></div>';
+  if (A.features.rate) facts += '<div><dt>' + ic('clock') + '<span>Valor/hora</span></dt><dd class="num">' + euro(l.rate) + '</dd></div>';
+  facts += '<div><dt>' + ic('grid') + '<span>' + esc(A.unit.p) + '</span></dt><dd>' + l.units.length + '</dd></div>';
+  if (A.features.ical) facts += '<div><dt>' + ic('link') + '<span>Calendários iCal</span></dt><dd>' + calCountLabel(l.units) + '</dd></div>';
+  facts += '<div><dt>' + ic('tag') + '<span>Serviços</span></dt><dd>' + (svcs.join('') || '<span class="muted">—</span>') + '</dd></div>';
+  return '<article class="lcard" id="card-' + l.id + '">' +
+    '<div class="lcard-img">' + art(l.img) + '</div>' +
+    '<div class="lcard-body">' +
+      '<div class="lcard-top"><h3>' + esc(l.name) + '</h3>' + pill(LOC_STATUS[l.status]) +
+        '<button type="button" class="icon-btn" data-act="menu-location" data-id="' + l.id + '" aria-label="Mais opções para ' + esc(l.name) + '" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></div>' +
+      '<p class="addr">' + ic('pin') + '<span>' + esc(l.address) + '</span></p>' +
+      '<dl class="facts">' + facts + '</dl>' +
+      '<button type="button" class="btn btn-outline btn-wide" data-act="manage-location" data-id="' + l.id + '">' + ic('gear') + 'Gerir ' + lo(A.loc.s) + '</button>' +
+    '</div>' +
+  '</article>';
+}
+function locationMenu(anchor, l){
+  openMenu(anchor, [
+    {label:'Gerir ' + lo(A.loc.s), icon:'gear', run:function(){ go({name:'location', clientId:l.clientId, locId:l.id}); }},
+    {label:'Editar dados', icon:'edit', run:function(){ openLocationForm(l.clientId, l.id); }},
+    l.status === 'active'
+      ? {label:'Pausar ' + lo(A.loc.s), icon:'pause', run:function(){ l.status = 'paused'; render(); toast(l.name + ' pausado.'); }}
+      : {label:'Reativar ' + lo(A.loc.s), icon:'play', run:function(){ l.status = 'active'; render(); toast(l.name + ' reativado.'); }},
+    '-',
+    {label:'Remover ' + lo(A.loc.s), icon:'trash', danger:true, run:function(){
+      confirmDlg('Remover ' + l.name + '?', 'As ' + unitCount(l.units.length) + ' deste ' + lo(A.loc.s) + ' também são removidas. Nesta simulação não há histórico a preservar.', 'Remover', function(){
+        D.locations = D.locations.filter(function(x){ return x !== l; }); render(); toast(l.name + ' removido.');
+      });
+    }}
+  ]);
+}
+
+/* ---- criar/editar local ---- */
+function openLocationForm(clientId, locId){
+  var c = client(clientId), l = locId ? location_(locId) : null;
+  var v = l ? clone(l) : {name:'', address:'', status:'active', img:'living', team:'', rate:'', services:[0], units:[]};
+  var newUnits = [];
+  var o = openDrawer(l ? 'Editar ' + lo(A.loc.s) : novo(A.loc));
+  var F = A.features;
+  o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+    '<form id="lfForm" novalidate style="display:contents"><div class="dr-scroll">' +
+      '<div class="dr-title"><p class="eyebrow">' + esc(c.name) + '</p><h2>' + (l ? esc(l.name) : esc(novo(A.loc))) + '</h2>' +
+        '<p>' + (l ? 'Dados principais. A configuração completa está em “Gerir ' + lo(A.loc.s) + '”.' : 'Cria o ' + lo(A.loc.s) + ' e as primeiras ' + lo(A.unit.p) + '. Podes completar a configuração a seguir.') + '</p></div>' +
+      '<div class="form">' +
+        fld('lf-name', 'Nome do ' + lo(A.loc.s), '<input id="lf-name" name="name" value="' + esc(v.name) + '" placeholder="Ex.: Rosário 123">') +
+        fld('lf-address', 'Morada', '<input id="lf-address" name="address" value="' + esc(v.address) + '" placeholder="Rua, n.º, código postal e localidade">') +
+        '<div class="fld"><span class="flabel">Imagem</span><div class="pick-img" role="radiogroup" aria-label="Imagem">' +
+          Object.keys(ART).map(function(k){ return '<label><input type="radio" name="img" value="' + k + '"' + (k === v.img ? ' checked' : '') + ' aria-label="Imagem ' + k + '">' + art(k) + '</label>'; }).join('') +
+        '</div><p class="help">Simulação: nesta fase escolhe uma ilustração em vez de carregar uma fotografia.</p></div>' +
+        (F.team || F.rate ? '<div class="grid2">' +
+          (F.team ? fld('lf-team', 'Equipa por defeito', '<select id="lf-team" name="team">' + opts([['','Sem equipa']].concat(TEAMS.map(function(t){ return [t.id, t.name]; })), v.team || '') + '</select>') : '') +
+          (F.rate ? fld('lf-rate', 'Valor/hora cobrado', '<div class="suffix"><input id="lf-rate" name="rate" inputmode="decimal" value="' + (v.rate === '' || v.rate == null ? '' : Number(v.rate).toFixed(2).replace('.', ',')) + '" placeholder="18,00"><span>€</span></div>', {optional:true}) : '') +
+        '</div>' : '') +
+        '<div class="fld"><span class="flabel">Estado</span>' + radios('status', [['active','Ativo'],['paused','Pausado']], v.status) + '</div>' +
+        '<div class="fld"><span class="flabel">Serviços ativos</span><div class="radios">' + A.services.map(function(s, i){
+          return '<label><input type="checkbox" name="svc" value="' + i + '"' + (v.services.indexOf(i) !== -1 ? ' checked' : '') + '><span>' + esc(s[1]) + '</span></label>';
+        }).join('') + '</div></div>' +
+        (l ? '' : '<div class="fld"><label for="lf-unit">' + esc(A.unit.p) + ' <span class="opt">(' + esc(lo(A.unit.hint)) + ')</span></label>' +
+          '<div class="chip-input" id="lf-units"></div>' +
+          '<div class="addrow"><input id="lf-unit" class="ctl" placeholder="Ex.: AP 1 Frente"><button type="button" class="btn btn-outline" data-d="add-unit">' + ic('plus') + 'Adicionar</button></div>' +
+          '<p class="help">Prime Enter para adicionar. Podes criar mais ' + lo(A.unit.p) + ' depois.</p></div>') +
+      '</div></div>' +
+      '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button><button type="submit" class="btn btn-primary">' + (l ? 'Guardar' : 'Criar ' + lo(A.loc.s)) + '</button></div>' +
+    '</form>';
+  var fm = $('#lfForm', o.el);
+  requestAnimationFrame(function(){ $('#lf-name', o.el).focus(); });
+  function drawUnits(){
+    var box = $('#lf-units', o.el); if (!box) return;
+    box.innerHTML = newUnits.map(function(n, i){ return '<span class="chip-x">' + esc(n) + '<button type="button" data-d="rm-unit" data-i="' + i + '" aria-label="Remover ' + esc(n) + '">' + ic('x') + '</button></span>'; }).join('');
+  }
+  function addUnit(){
+    var inp = $('#lf-unit', o.el), n = inp.value.trim();
+    if (n && newUnits.indexOf(n) === -1) newUnits.push(n);
+    inp.value = ''; drawUnits(); inp.focus();
+  }
+  o.el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    if (b.dataset.d === 'close') closeOverlay(o);
+    if (b.dataset.d === 'add-unit') addUnit();
+    if (b.dataset.d === 'rm-unit'){ newUnits.splice(+b.dataset.i, 1); drawUnits(); }
+  });
+  var unitInput = $('#lf-unit', o.el);
+  if (unitInput) unitInput.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); addUnit(); } });
+  fm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var g = function(n){ return fm.elements[n] ? fm.elements[n].value.trim() : ''; };
+    var rate = g('rate'), errs = {};
+    if (!g('name')) errs['lf-name'] = 'Indica o nome.';
+    if (!g('address')) errs['lf-address'] = 'Indica a morada.';
+    if (rate && !/^\d{1,3}([.,]\d{1,2})?$/.test(rate)) errs['lf-rate'] = 'Valor inválido. Ex.: 18,00';
+    if (!showErrs(fm, errs)) return;
+    var val = {name:g('name'), address:g('address'), img:fm.querySelector('[name=img]:checked').value, status:fm.querySelector('[name=status]:checked').value,
+      services:$$('[name=svc]:checked', fm).map(function(x){ return +x.value; })};
+    if (F.team) val.team = g('team') || null;
+    if (F.rate) val.rate = rate ? parseFloat(rate.replace(',', '.')) : null;
+    closeOverlay(o);
+    if (l){ Object.assign(l, val); render(); toast(l.name + ' atualizado.'); return; }
+    var loc = Object.assign({id:uid('l'), clientId:clientId, team:null, rate:null, laundryOn:false, laundryQty:{lencol:2, edredon:2, fronhas:4, banho:2, rosto:2},
+      access:'', notes:'',
+      units:newUnits.map(function(n){ return {id:uid('u'), name:n, type:A.unit.types[0], capacity:2, status:'active', team:null, rate:null, laundry:null, calendars:[]}; })}, val);
+    D.locations.push(loc);
+    closeAll();
+    go({name:'location', clientId:clientId, locId:loc.id}, true);
+    toast(loc.name + ' criado. Configura as ' + lo(A.unit.p) + ' e as preferências.');
+  });
+}
+
+/* =========================================================
+   Ecrã: detalhe do local (configuração Limpezas)
+   ========================================================= */
+function renderDetail(){
+  var det = UI.det, d = det.draft, c = client(d.clientId), F = A.features;
+  var tabs = [['config','Configuração'],['units', A.unit.p + ' (' + d.units.length + ')']];
+  if (F.laundry) tabs.push(['laundry','Lavandaria']);
+  tabs.push(['notes','Notas']);
+  if (!tabs.some(function(t){ return t[0] === det.tab; })) det.tab = 'config';
+  page.innerHTML = crumbs([{label:'Clientes', act:'go-clients'}, {label:c.name, act:'go-locations', id:c.id}, {label:d.name || 'Sem nome'}]) +
+    '<section class="head"><div>' +
+      '<h1 id="detTitle">' + esc(d.name || 'Sem nome') + '</h1>' +
+      '<p class="lede">' + esc(A.detailSub) + '</p></div>' +
+      '<div class="head-actions"><span class="dirty" id="dirtyFlag" hidden>Alterações por guardar</span>' +
+        '<button type="button" class="btn btn-outline" data-act="go-locations" data-id="' + c.id + '">' + ic('back') + 'Voltar</button>' +
+        '<button type="button" class="btn btn-primary" data-act="save-location">' + ic('save') + 'Guardar alterações</button>' +
+      '</div>' +
+    '</section>' +
+    '<div class="tabs" role="tablist" aria-label="Secções do ' + lo(A.loc.s) + '" id="detTabs">' + tabs.map(function(t){
+      var on = det.tab === t[0];
+      return '<button type="button" role="tab" class="tab" id="dtab-' + t[0] + '" aria-selected="' + on + '" tabindex="' + (on ? 0 : -1) + '" data-act="det-tab" data-tab="' + t[0] + '">' + esc(t[1]) + '</button>';
+    }).join('') + '</div>' +
+    '<section id="detBody" role="tabpanel" aria-labelledby="dtab-' + det.tab + '"></section>';
+  renderDetailBody();
+  updateDirty();
+}
+function updateDirty(){
+  var f = $('#dirtyFlag'); if (f) f.hidden = !isDirty();
+  var t = $('#detTitle'); if (t && UI.det) t.textContent = UI.det.draft.name || 'Sem nome';
+}
+/** Re-render do corpo mantendo o foco no mesmo controlo. */
+function rerenderBody(){
+  var a = document.activeElement, key = a && a.dataset ? (a.dataset.focusKey || '') : '';
+  renderDetailBody();
+  if (key){ var n = page.querySelector('[data-focus-key="' + key + '"]'); if (n) n.focus({preventScroll:true}); }
+}
+function renderDetailBody(){
+  var det = UI.det, d = det.draft, F = A.features, body = $('#detBody');
+  body.setAttribute('aria-labelledby', 'dtab-' + det.tab);
+  if (det.tab === 'config') body.innerHTML = cfgTab(d, det, F);
+  else if (det.tab === 'units') body.innerHTML = unitsTab(d, det, F);
+  else if (det.tab === 'laundry') body.innerHTML = laundryTab(d, det);
+  else body.innerHTML = notesTab(d);
+}
+function selNames(det){
+  return det.draft.units.filter(function(u){ return det.sel.indexOf(u.id) !== -1; }).map(function(u){ return u.name; });
+}
+function cfgTab(d, det, F){
+  var nSel = det.sel.length;
+  var left =
+    '<div class="card"><div class="card-h"><h3>Informação geral</h3></div>' +
+      '<div class="grid2">' +
+        fld('d-name', 'Nome do ' + lo(A.loc.s), '<input id="d-name" data-bind="name" data-focus-key="name" value="' + esc(d.name) + '">') +
+        fld('d-address', 'Morada', '<input id="d-address" data-bind="address" data-focus-key="address" value="' + esc(d.address) + '">') +
+      '</div>' +
+      '<div class="fld" style="margin-top:14px"><span class="flabel">Estado</span>' + radios('d-status', [['active','Ativo'],['paused','Pausado']], d.status).replace(/type="radio"/g, 'type="radio" data-bind="status"') + '</div>' +
+    '</div>' +
+    '<div class="card"><div class="card-h"><h3>' + esc(A.unit.p) + ' deste ' + lo(A.loc.s) + '</h3>' +
+      (d.units.length ? '<button type="button" class="link" data-act="sel-all" data-focus-key="sel-all">' + (nSel === d.units.length ? 'Limpar seleção' : 'Selecionar todas') + '</button>' : '') + '</div>' +
+      (d.units.length ? '<div class="units-pick">' + d.units.map(function(u){
+        return '<label><input type="checkbox" data-sel="' + u.id + '" data-focus-key="sel-' + u.id + '"' + (det.sel.indexOf(u.id) !== -1 ? ' checked' : '') + '>' + esc(u.name) + '</label>';
+      }).join('') + '</div>' +
+      '<label class="check-row"><input type="checkbox" data-apply data-focus-key="apply"' + (det.apply ? ' checked' : '') + '><span><b>Aplicar a todas as unidades selecionadas</b>' +
+        '<small>As preferências abaixo serão aplicadas a todas as unidades selecionadas.</small></span></label>'
+      : '<p class="muted" style="margin:0">Ainda sem ' + lo(A.unit.p) + '. <button type="button" class="link" data-act="det-tab" data-tab="units">Criar ' + lo(A.unit.p) + '</button></p>') +
+    '</div>';
+  if (F.team || F.rate){
+    left += '<div class="card"><div class="card-h"><h3>Equipa e preço</h3></div><div class="grid2">' +
+      (F.team ? fld('d-team', 'Equipa por defeito', '<select id="d-team" data-bind="team" data-focus-key="team">' + opts([['','Sem equipa']].concat(TEAMS.map(function(t){ return [t.id, t.name]; })), d.team || '') + '</select>', {help:'Sugerida no Planeamento para este ' + lo(A.loc.s) + '.'}) : '') +
+      (F.rate ? fld('d-rate', 'Valor/hora', '<div class="suffix"><input id="d-rate" data-bind="rate" data-type="money" data-focus-key="rate" inputmode="decimal" value="' + (d.rate == null ? '' : Number(d.rate).toFixed(2).replace('.', ',')) + '"><span>€</span></div>', {help:'Valor cobrado ao cliente por hora.'}) : '') +
+    '</div></div>';
+  }
+  if (F.ical) left += icalCard(d, det);
+  var right = '';
+  if (F.laundry){
+    right = '<div class="card"><label class="switch-card"><input type="checkbox" data-bind="laundryOn" data-focus-key="laundryOn"' + (d.laundryOn ? ' checked' : '') + '><span class="sw"></span>' +
+      '<span><b>Envia roupa para lavandaria externa</b><small>Ativa se este ' + lo(A.loc.s) + ' envia a roupa para uma lavandaria externa.</small></span></label></div>';
+    if (d.laundryOn){
+      right += '<div class="card"><div class="card-h"><h3>Setup de lavandaria</h3><span class="sub">' + qtyTotal(d.laundryQty) + ' peças</span></div>' +
+        '<p class="help" style="margin:-6px 0 6px">Quantidades por unidade</p>' +
+        LAUNDRY.map(function(it){
+          return '<div class="qty-row"><label for="q-' + it[0] + '">' + it[1] + '</label><div class="stepper">' +
+            '<button type="button" data-act="qty" data-item="' + it[0] + '" data-d="-1" data-focus-key="qm-' + it[0] + '" aria-label="Diminuir ' + it[1] + '">' + ic('minus', 'sm') + '</button>' +
+            '<input id="q-' + it[0] + '" type="number" min="0" max="20" data-bind="laundryQty.' + it[0] + '" data-type="int" data-focus-key="q-' + it[0] + '" value="' + (d.laundryQty[it[0]] || 0) + '">' +
+            '<button type="button" data-act="qty" data-item="' + it[0] + '" data-d="1" data-focus-key="qp-' + it[0] + '" aria-label="Aumentar ' + it[1] + '">' + ic('plus') + '</button>' +
+            '<span>un.</span></div></div>';
+        }).join('') +
+        '<div class="note">' + ic('info') + '<span>Estas quantidades serão aplicadas às unidades selecionadas.' +
+          (nSel ? ' <b>' + esc(selNames(det).join(', ')) + '</b>.' : '') + '</span></div>' +
+        (!det.apply || !nSel ? '<div class="note warn">' + ic('alert') + '<span>' + (!nSel ? 'Seleciona pelo menos uma unidade.' : 'Ativa “Aplicar a todas as unidades selecionadas” para aplicar este setup.') + '</span></div>' : '') +
+      '</div>';
+    }
+  }
+  var summary;
+  if (!d.units.length) summary = 'Ao guardar, só o ' + lo(A.loc.s) + ' é atualizado.';
+  else if (det.apply && nSel){
+    var what = [F.team ? 'a equipa por defeito' : '', F.rate ? 'o valor/hora' : '', F.laundry ? (d.laundryOn ? 'o setup de lavandaria' : 'a desativação da lavandaria') : ''].filter(Boolean);
+    summary = what.length
+      ? 'Ao guardar, ' + joinPt(what) + (what.length > 1 ? ' são aplicados' : ' é aplicado') + ' a ' + unitCount(nSel) + ' ' + (nSel === 1 ? 'selecionada' : 'selecionadas') + '.'
+      : 'Ao guardar, as preferências são aplicadas a ' + unitCount(nSel) + '.';
+  } else summary = 'Ao guardar, só o ' + lo(A.loc.s) + ' é atualizado; as ' + lo(A.unit.p) + ' mantêm a configuração atual.';
+  return '<div class="cfg' + (right ? '' : ' single') + '"><div class="col">' + left + '</div>' + (right ? '<div class="col">' + right + '</div>' : '') + '</div>' +
+    '<div class="summary-bar">' + ic('info') + '<span id="applySummary">' + esc(summary) + '</span></div>';
+}
+function joinPt(list){ return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' e ' + list[list.length - 1]; }
+
+function unitsTab(d, det, F){
+  var n = d.units.length, nSel = det.sel.length;
+  var rows = d.units.map(function(u){
+    var on = det.sel.indexOf(u.id) !== -1;
+    var team = F.team ? (u.team ? esc(teamName(u.team)) : esc(teamName(d.team)) + '<span class="tag">Do ' + lo(A.loc.s) + '</span>') : '';
+    var rate = F.rate ? (u.rate != null ? euro(u.rate) : euro(d.rate) + '<span class="tag">Do ' + lo(A.loc.s) + '</span>') : '';
+    var laundry = !d.laundryOn ? '<span class="muted">Desativada</span>' : u.laundry ? '<span class="pill ok">' + qtyTotal(u.laundry) + ' peças</span>' : '<span class="muted">Não envia</span>';
+    return '<tr class="' + (on ? 'sel' : '') + '">' +
+      '<td class="cb"><input type="checkbox" data-sel="' + u.id + '" data-focus-key="usel-' + u.id + '"' + (on ? ' checked' : '') + ' aria-label="Selecionar ' + esc(u.name) + '"></td>' +
+      '<td><button type="button" class="unit-link" data-act="edit-unit" data-id="' + u.id + '">' + esc(u.name) + '</button><small>' + esc(u.type) + ' · ' + esc(A.unit.capacity) + ': ' + esc(u.capacity) + '</small></td>' +
+      (F.team ? '<td data-l="Equipa">' + team + '</td>' : '') +
+      (F.rate ? '<td data-l="Valor/hora" class="num">' + rate + '</td>' : '') +
+      (F.laundry ? '<td data-l="Lavandaria">' + laundry + '</td>' : '') +
+      (F.ical ? '<td data-l="iCal">' + calChips(u) + '</td>' : '') +
+      '<td>' + pill(u.status === 'active' ? ['ok','Ativa'] : ['dark','Inativa']) + '</td>' +
+      '<td class="act"><button type="button" class="icon-btn" data-act="menu-unit" data-id="' + u.id + '" aria-label="Mais opções para ' + esc(u.name) + '" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></td>' +
+    '</tr>';
+  }).join('');
+  return '<div class="unit-bar">' +
+      '<div class="left">' + (n ? '<label style="display:flex;align-items:center;gap:9px;cursor:pointer"><input type="checkbox" data-act-check="sel-all" data-focus-key="usel-all"' + (nSel === n ? ' checked' : '') + '>Selecionar todas</label><span class="muted">' + nSel + ' de ' + n + ' selecionadas</span>' : '<span class="muted">' + esc(A.unit.hint) + '</span>') + '</div>' +
+      '<div class="right">' +
+        (F.ical ? '<button type="button" class="btn btn-outline btn-sm" data-act="cal-sync-sel" data-focus-key="cal-sync-sel"' + (nSel && !calBusy(selUnits(det)) ? '' : ' disabled') + '>' + (calBusy(selUnits(det)) ? '<span class="spin"></span>A sincronizar…' : ic('refresh') + 'Sincronizar selecionadas') + '</button>' : '') +
+        '<button type="button" class="btn btn-outline btn-sm" data-act="bulk-apply" data-focus-key="bulk"' + (nSel ? '' : ' disabled') + '>' + ic('copy') + 'Aplicar a ' + nSel + ' selecionadas</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" data-act="new-unit" data-focus-key="new-unit">' + ic('plus') + esc(novo(A.unit)) + '</button>' +
+      '</div>' +
+    '</div>' +
+    (n ? '<div class="tablewrap"><div class="tscroll"><table class="tbl tbl-units"><thead><tr><th class="cb"><span class="sr">Seleção</span></th><th>' + esc(A.unit.s) + '</th>' +
+      (F.team ? '<th>Equipa</th>' : '') + (F.rate ? '<th>Valor/hora</th>' : '') + (F.laundry ? '<th>Lavandaria</th>' : '') + (F.ical ? '<th>Calendários iCal</th>' : '') +
+      '<th>Estado</th><th class="act"><span class="sr">Ações</span></th></tr></thead><tbody>' + rows + '</tbody></table></div></div>'
+      : '<div class="empty" style="margin-top:12px"><b>Ainda sem ' + lo(A.unit.p) + '</b>Cria a primeira ' + lo(A.unit.s) + ' (' + esc(lo(A.unit.hint)) + ').</div>') +
+    '<p class="help" style="margin-top:12px">' + (F.ical ? 'Os calendários iCal são definidos em cada ' + lo(A.unit.s) + ': abre a ' + lo(A.unit.s) + ' para os gerir. ' : '') + 'Alterações às ' + lo(A.unit.p) + ' ficam por guardar até carregares em “Guardar alterações”.</p>';
+}
+function laundryTab(d, det){
+  var withL = d.units.filter(function(u){ return u.laundry; });
+  var perClean = withL.reduce(function(s, u){ return s + qtyTotal(u.laundry); }, 0);
+  var head = '<div class="card" style="margin-top:18px"><label class="switch-card"><input type="checkbox" data-bind="laundryOn" data-focus-key="laundryOn2"' + (d.laundryOn ? ' checked' : '') + '><span class="sw"></span>' +
+    '<span><b>Envia roupa para lavandaria externa</b><small>O setup é definido no ' + lo(A.loc.s) + ' mas aplica-se apenas às unidades selecionadas.</small></span></label></div>';
+  if (!d.laundryOn) return head + '<div class="empty" style="margin-top:16px"><b>Lavandaria externa desativada</b>Ativa o interruptor para definir o setup de lavandaria.</div>';
+  return head +
+    '<div class="mini-stats"><div class="mini"><b>' + withL.length + '/' + d.units.length + '</b><span>unidades com lavandaria</span></div>' +
+      '<div class="mini"><b>' + qtyTotal(d.laundryQty) + '</b><span>peças no setup do ' + lo(A.loc.s) + '</span></div>' +
+      '<div class="mini"><b>' + perClean + '</b><span>peças se todas forem limpas</span></div></div>' +
+    '<div class="tablewrap"><div class="tscroll"><table class="tbl"><thead><tr><th>Unidade</th>' + LAUNDRY.map(function(it){ return '<th class="num">' + it[1] + '</th>'; }).join('') + '<th class="num">Total</th></tr></thead><tbody>' +
+      d.units.map(function(u){
+        return '<tr><td><b>' + esc(u.name) + '</b></td>' + LAUNDRY.map(function(it){ return '<td class="num">' + (u.laundry ? u.laundry[it[0]] : '<span class="muted">—</span>') + '</td>'; }).join('') +
+          '<td class="num"><b>' + (u.laundry ? qtyTotal(u.laundry) : '—') + '</b></td></tr>';
+      }).join('') +
+    '</tbody></table></div></div>' +
+    '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn btn-outline btn-sm" data-act="det-tab" data-tab="config">' + ic('gear') + 'Editar setup e seleção</button></div>' +
+    '<div class="card" style="margin-top:18px"><div class="card-h"><h3>Como vai funcionar</h3><span class="svc neutral">Fase seguinte</span></div>' +
+      '<div class="steps">' +
+        '<div class="step"><b><i>1</i>Durante a limpeza</b>A colaboradora confirma as quantidades de roupa da unidade.</div>' +
+        '<div class="step"><b><i>2</i>Registo de envio</b>O sistema cria o registo de envio para a lavandaria.</div>' +
+        '<div class="step"><b><i>3</i>Controlo</b>Receção e diferenças ficam associadas ao ' + lo(A.loc.s) + '.</div>' +
+      '</div></div>';
+}
+function notesTab(d){
+  return '<div class="cfg single"><div class="col">' +
+    '<div class="card"><div class="card-h"><h3>Instruções de acesso</h3></div>' +
+      fld('d-access', 'Como entrar', '<textarea id="d-access" data-bind="access" data-focus-key="access" placeholder="Ex.: cofre de chaves, código da porta, porteiro…">' + esc(d.access) + '</textarea>', {help:'Visível para a equipa na aplicação (simulação).'}) +
+    '</div>' +
+    '<div class="card"><div class="card-h"><h3>Notas para a equipa</h3></div>' +
+      fld('d-notes', 'Notas', '<textarea id="d-notes" data-bind="notes" data-focus-key="notes" placeholder="Materiais, cuidados especiais, preferências do cliente…">' + esc(d.notes) + '</textarea>') +
+    '</div></div></div>';
+}
+
+/* ---- ações do detalhe ---- */
+function setPath(obj, path, value){
+  var parts = path.split('.'), o = obj;
+  for (var i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+  o[parts[parts.length - 1]] = value;
+}
+function onDetailInput(e){
+  var t = e.target, det = UI.det;
+  if (!det) return;
+  if (t.dataset.bind != null){
+    var v;
+    if (t.type === 'checkbox') v = t.checked;
+    else if (t.type === 'radio'){ if (!t.checked) return; v = t.value; }
+    else if (t.dataset.type === 'int') v = Math.max(0, Math.min(20, parseInt(t.value, 10) || 0));
+    else if (t.dataset.type === 'money'){ var s = t.value.trim().replace(',', '.'); v = s === '' ? null : (isNaN(parseFloat(s)) ? det.draft.rate : parseFloat(s)); }
+    else v = t.value;
+    if (t.dataset.bind === 'team') v = v || null;
+    setPath(det.draft, t.dataset.bind, v);
+    updateDirty();
+    // Só re-renderiza quando a mudança altera a estrutura (interruptores, estado).
+    if (e.type === 'change' && (t.type === 'checkbox' || t.type === 'radio' || t.tagName === 'SELECT' || t.dataset.type === 'int')) rerenderBody();
+    if (t.dataset.bind === 'name') { var bc = $('.crumbs [aria-current]'); if (bc) bc.textContent = v || 'Sem nome'; }
+    return;
+  }
+  if (e.type !== 'change') return;
+  if (t.dataset.sel){
+    var id = t.dataset.sel, i = det.sel.indexOf(id);
+    if (t.checked && i === -1) det.sel.push(id);
+    if (!t.checked && i !== -1) det.sel.splice(i, 1);
+    rerenderBody();
+  } else if (t.dataset.apply != null){
+    det.apply = t.checked; rerenderBody();
+  } else if (t.dataset.actCheck === 'sel-all'){
+    det.sel = t.checked ? det.draft.units.map(function(u){ return u.id; }) : [];
+    rerenderBody();
+  }
+}
+function saveLocation(){
+  var det = UI.det, d = det.draft, F = A.features, loc = location_(det.locId), errs = [];
+  if (!d.name.trim()) errs.push('o nome');
+  if (!d.address.trim()) errs.push('a morada');
+  if (errs.length){
+    det.tab = 'config'; renderDetail();
+    toast('Indica ' + joinPt(errs) + ' do ' + lo(A.loc.s) + '.');
+    var f = $('#d-' + (d.name.trim() ? 'address' : 'name')); if (f){ f.setAttribute('aria-invalid', 'true'); f.focus(); }
+    return;
+  }
+  var applied = 0;
+  if (det.apply && det.sel.length){
+    d.units.forEach(function(u){
+      if (det.sel.indexOf(u.id) === -1) return;
+      applied++;
+      // Aplicar = a unidade passa a seguir a configuração do alojamento.
+      if (F.team) u.team = null;
+      if (F.rate) u.rate = null;
+      if (F.laundry) u.laundry = d.laundryOn ? clone(d.laundryQty) : null;
+    });
+  }
+  Object.keys(d).forEach(function(k){ loc[k] = clone(d[k]); });
+  det.orig = JSON.stringify(loc);
+  det.draft = clone(loc);
+  renderDetail();
+  toast('Alterações guardadas' + (applied ? ' · aplicadas a ' + unitCount(applied) : '') + '.');
+}
+/* =========================================================
+   Calendários iCal — pertencem à unidade; podem coexistir vários
+   ========================================================= */
+var CAL_SYNC = {};   // id do calendário -> a sincronizar
+function hasUrl(c){ return !!c.url.trim(); }
+function calStatus(c){ return hasUrl(c) ? ICAL[c.status] : ['dark','Sem URL']; }
+function selUnits(det){ return det.draft.units.filter(function(u){ return det.sel.indexOf(u.id) !== -1; }); }
+function calBusy(units){ return units.some(function(u){ return u.calendars.some(function(c){ return CAL_SYNC[c.id]; }); }); }
+function calChips(u, small){
+  if (!u.calendars.length) return small ? '' : '<span class="muted">Sem calendário</span>';
+  return '<span style="display:inline-flex;flex-wrap:wrap;gap:4px">' + u.calendars.map(function(c){
+    var cls = !hasUrl(c) || c.status === 'none' ? 'neutral' : c.status === 'connected' ? 'ok' : 'bad';
+    return '<span class="svc ' + cls + '" title="' + esc(calStatus(c)[1]) + '">' + esc(c.platform) + (cls === 'bad' ? ' · erro' : '') + '</span>';
+  }).join('') + '</span>';
+}
+function calCountLabel(units){
+  var all = [], err = 0;
+  units.forEach(function(u){ u.calendars.forEach(function(c){ if (hasUrl(c)){ all.push(c); if (c.status === 'error') err++; } }); });
+  if (!all.length) return '<span class="muted">Sem calendários</span>';
+  var ok = all.filter(function(c){ return c.status === 'connected'; }).length;
+  return '<span>' + plural(ok, 'ligado', 'ligados') + '</span>' + (err ? '<span class="svc bad">' + plural(err, 'com erro', 'com erro') + '</span>' : '');
+}
+/** Outra unidade (ou a mesma) que já usa este URL — evita reservas duplicadas. */
+function calDuplicate(c, unit, units){
+  var url = c.url.trim(); if (!url) return null;
+  if (unit.calendars.some(function(x){ return x !== c && x.url.trim() === url; })) return 'repetido nesta ' + lo(A.unit.s);
+  var other = units.find(function(u){ return u.id !== unit.id && u.calendars.some(function(x){ return x.url.trim() === url; }); });
+  return other ? 'ligado a ' + other.name : null;
+}
+function calMetaHTML(c){
+  return pill(calStatus(c), true) + '<span>Última sincronização: ' + esc(c.lastSync || '—') + '</span>' +
+    (hasUrl(c) && c.status === 'connected' ? '<span>' + plural(c.imported, 'reserva importada', 'reservas importadas') + '</span>' : '');
+}
+function calWarnHTML(c, unit, units){
+  var dup = calDuplicate(c, unit, units);
+  if (dup) return '<div class="note warn">' + ic('alert') + '<span>Este URL já está ' + esc(dup) + '. As ' + lo(A.jobs) + ' ficariam duplicadas.</span></div>';
+  if (hasUrl(c) && c.status === 'error') return '<div class="note warn">' + ic('alert') + '<span>Não foi possível ler este calendário. Confirma o URL e sincroniza novamente.</span></div>';
+  return '';
+}
+/** Editor da lista de calendários de uma unidade (usado na Configuração e no painel da unidade). */
+function calEditorHTML(unit, units){
+  var rows = unit.calendars.map(function(c){
+    var busy = CAL_SYNC[c.id];
+    return '<div class="cal-row">' +
+      '<select class="ctl" data-cal="' + c.id + '" data-cal-field="platform" data-focus-key="cp-' + c.id + '" aria-label="Plataforma">' + opts(PLATFORMS.map(function(p){ return [p, p]; }), c.platform) + '</select>' +
+      '<input class="ctl cal-url" type="url" data-cal="' + c.id + '" data-cal-field="url" data-focus-key="cu-' + c.id + '" value="' + esc(c.url) + '" placeholder="https://…/calendar.ics" aria-label="URL iCal ' + esc(c.platform) + '">' +
+      '<div class="cal-acts">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-act-cal="sync" data-cal="' + c.id + '" data-focus-key="cs-' + c.id + '"' + (busy ? ' disabled' : '') + '>' + (busy ? '<span class="spin"></span>A sincronizar…' : ic('refresh') + 'Sincronizar agora') + '</button>' +
+        '<button type="button" class="icon-btn" data-act-cal="remove" data-cal="' + c.id + '" aria-label="Remover calendário ' + esc(c.platform) + '">' + ic('trash') + '</button>' +
+      '</div>' +
+      '<div class="cal-meta" data-cal-meta="' + c.id + '">' + calMetaHTML(c) + '</div>' +
+      '<div class="cal-warn" data-cal-warn="' + c.id + '">' + calWarnHTML(c, unit, units) + '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="cals" data-cal-unit="' + unit.id + '">' +
+    (rows || '<p class="muted" style="margin:0">Sem calendários. Adiciona um por cada plataforma onde ' + esc(unit.name || 'esta ' + lo(A.unit.s)) + ' está anunciada.</p>') +
+    '<div class="cal-add"><button type="button" class="btn btn-soft btn-sm" data-act-cal="add" data-focus-key="cal-add-' + unit.id + '">' + ic('plus') + 'Adicionar calendário</button></div>' +
+  '</div>';
+}
+function refreshCalSlots(root, unit, units){
+  unit.calendars.forEach(function(c){
+    var m = root.querySelector('[data-cal-meta="' + c.id + '"]'), w = root.querySelector('[data-cal-warn="' + c.id + '"]');
+    if (m) m.innerHTML = calMetaHTML(c);
+    if (w) w.innerHTML = calWarnHTML(c, unit, units);
+  });
+}
+function nextPlatform(unit){
+  return PLATFORMS.find(function(p){ return p !== 'Outro' && !unit.calendars.some(function(c){ return c.platform === p; }); }) || 'Outro';
+}
+/** Sincronização simulada. `done` corre depois do atraso. */
+function syncCalendars(list, done){
+  var valid = list.filter(hasUrl);
+  valid.forEach(function(c){ CAL_SYNC[c.id] = true; });
+  setTimeout(function(){
+    valid.forEach(function(c){
+      delete CAL_SYNC[c.id];
+      var ok = /^https?:\/\/\S+\.\S+/.test(c.url.trim()) && !/erro/i.test(c.url);
+      c.status = ok ? 'connected' : 'error';
+      c.lastSync = nowLabel();
+      if (ok) c.imported = 3 + Math.floor(Math.random() * 12);
+    });
+    done(valid);
+  }, 1200);
+  return valid.length;
+}
+function syncToast(list){
+  var err = list.filter(function(c){ return c.status === 'error'; }).length;
+  toast(list.length === 1
+    ? (err ? 'Não foi possível ler o calendário ' + list[0].platform + ' (simulação).' : 'Calendário ' + list[0].platform + ' sincronizado (simulação).')
+    : plural(list.length, 'calendário sincronizado', 'calendários sincronizados') + (err ? ' · ' + err + ' com erro' : '') + ' (simulação).');
+}
+/** Ações do editor. `rerender(focusKey)` redesenha o contexto (página ou painel). */
+function calClick(b, unit, rerender){
+  var act = b.dataset.actCal;
+  if (act === 'add'){
+    var nc = {id:uid('k'), platform:nextPlatform(unit), url:'', status:'none', lastSync:null, imported:0};
+    unit.calendars.push(nc); rerender('cu-' + nc.id); return;
+  }
+  var c = unit.calendars.find(function(x){ return x.id === b.dataset.cal; });
+  if (!c) return;
+  if (act === 'remove'){
+    unit.calendars.splice(unit.calendars.indexOf(c), 1);
+    rerender('cal-add-' + unit.id); toast('Calendário ' + c.platform + ' removido (por guardar).'); return;
+  }
+  if (act === 'sync'){
+    if (!hasUrl(c)){ toast('Indica o URL iCal antes de sincronizar.'); rerender('cu-' + c.id); return; }
+    syncCalendars([c], function(list){ rerender(null, true); syncToast(list); });
+    rerender('cs-' + c.id);
+  }
+}
+function calInput(t, unit, root, units){
+  var c = unit.calendars.find(function(x){ return x.id === t.dataset.cal; });
+  if (!c) return;
+  var field = t.dataset.calField;
+  if (field === 'url' && c.url !== t.value){ c.url = t.value; c.status = 'none'; }
+  if (field === 'platform') c.platform = t.value;
+  refreshCalSlots(root, unit, units);
+}
+/** Entrada nos editores de calendário da página (Configuração). */
+function calPageInput(e){
+  var t = e.target;
+  if (!t.dataset || t.dataset.cal == null || !UI.det) return false;
+  var wrap = t.closest('[data-cal-unit]');
+  var unit = UI.det.draft.units.find(function(u){ return u.id === wrap.dataset.calUnit; });
+  if (unit){ calInput(t, unit, page, UI.det.draft.units); updateDirty(); }
+  return true;
+}
+function pageCalRerender(key, async){
+  if (UI.view.name !== 'location' || !UI.det) return;
+  if (key){ renderDetailBody(); var n = page.querySelector('[data-focus-key="' + key + '"]'); if (n) n.focus({preventScroll:true}); }
+  else rerenderBody();
+  updateDirty();
+}
+function icalCard(d, det){
+  var h = '<div class="card"><div class="card-h"><h3>Integração iCal</h3><span class="sub">Simulação · por ' + lo(A.unit.s) + '</span></div>';
+  if (!d.units.length) return h + '<p class="muted" style="margin:0">Os calendários ficam em cada ' + lo(A.unit.s) + '. Cria primeiro as ' + lo(A.unit.p) + '.</p></div>';
+  if (d.units.length === 1){
+    var u = d.units[0];
+    return h + '<p class="help" style="margin:-6px 0 12px">Este ' + lo(A.loc.s) + ' tem uma única ' + lo(A.unit.s) + ' (' + esc(u.name) + '): os calendários ficam associados a ela. Podes ter vários em simultâneo, um por plataforma.</p>' +
+      calEditorHTML(u, d.units) + '</div>';
+  }
+  var withCal = d.units.filter(function(u){ return u.calendars.some(hasUrl); }).length;
+  var anyUrl = d.units.some(function(u){ return u.calendars.some(hasUrl); });
+  var busy = calBusy(d.units);
+  var ok = 0, err = 0;
+  d.units.forEach(function(u){ u.calendars.forEach(function(c){ if (hasUrl(c)){ if (c.status === 'connected') ok++; if (c.status === 'error') err++; } }); });
+  return h + '<p class="cal-sum"><b>' + withCal + ' de ' + d.units.length + '</b> ' + lo(A.unit.p) + ' com calendário · ' + plural(ok, 'ligado', 'ligados') +
+    (err ? ' · <span style="color:var(--bad-fg);font-weight:500">' + err + ' com erro</span>' : '') + '</p>' +
+    d.units.map(function(u){
+      return '<div class="cal-sum-row"><span class="grow">' + esc(u.name) + '</span><span class="chips">' + calChips(u) + '</span></div>';
+    }).join('') +
+    '<div class="cal-add" style="margin-top:10px">' +
+      '<button type="button" class="btn btn-outline btn-sm" data-act="cal-sync-all" data-focus-key="cal-sync-all"' + (busy || !anyUrl ? ' disabled' : '') + '>' + (busy ? '<span class="spin"></span>A sincronizar…' : ic('refresh') + 'Sincronizar todas') + '</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-act="det-tab" data-tab="units">Gerir nas ' + lo(A.unit.p) + ic('arrow') + '</button>' +
+    '</div>' +
+    '<p class="help">Cada calendário pertence a uma ' + lo(A.unit.s) + ' e não é afetado por “Aplicar a todas as unidades selecionadas”.</p></div>';
+}
+function syncMany(units, emptyMsg){
+  var list = [];
+  units.forEach(function(u){ u.calendars.forEach(function(c){ if (hasUrl(c)) list.push(c); }); });
+  if (!list.length){ toast(emptyMsg); return; }
+  syncCalendars(list, function(done){ pageCalRerender(null, true); syncToast(done); });
+  pageCalRerender(null);
+}
+
+function unitMenu(anchor, u){
+  var det = UI.det, F = A.features;
+  var items = [
+    {label:'Editar ' + lo(A.unit.s), icon:'edit', run:function(){ openUnitDrawer(u); }}
+  ];
+  if (F.ical) items.push({label:'Calendários iCal', icon:'link', run:function(){ openUnitDrawer(u, 'cal'); }});
+  items.push(
+    {label:'Duplicar', icon:'copy', run:function(){
+      // Os URLs iCal são únicos por unidade: a cópia fica sem calendários.
+      var copy = clone(u); copy.id = uid('u'); copy.name = u.name + ' (cópia)'; copy.calendars = [];
+      det.draft.units.splice(det.draft.units.indexOf(u) + 1, 0, copy); det.sel.push(copy.id);
+      renderDetail(); toast(copy.name + ' criada, sem calendários iCal.');
+    }}
+  );
+  if ((F.team && u.team) || (F.rate && u.rate != null)) items.push({label:'Repor valores do ' + lo(A.loc.s), icon:'refresh', run:function(){ u.team = null; u.rate = null; renderDetail(); toast(u.name + ' segue o ' + lo(A.loc.s) + '.'); }});
+  items.push('-', {label:'Remover ' + lo(A.unit.s), icon:'trash', danger:true, run:function(){
+    confirmDlg('Remover ' + u.name + '?', 'A ' + lo(A.unit.s) + ' é removida ao guardar as alterações.', 'Remover', function(){
+      det.draft.units = det.draft.units.filter(function(x){ return x !== u; });
+      det.sel = det.sel.filter(function(x){ return x !== u.id; });
+      renderDetail(); toast(u.name + ' removida (por guardar).');
+    });
+  }});
+  openMenu(anchor, items);
+}
+function openUnitDrawer(u, focus){
+  var det = UI.det, isNew = !u, F = A.features;
+  var st = {unit: u ? clone(u) : {id:uid('u'), name:'', type:A.unit.types[0], capacity:2, status:'active', team:null, rate:null, laundry:null, calendars:[]}};
+  var o = openDrawer(isNew ? novo(A.unit) : 'Editar ' + u.name);
+  // Lista de unidades com a cópia em edição, para detetar URLs duplicados.
+  function unitsView(){
+    var list = det.draft.units.map(function(x){ return x.id === st.unit.id ? st.unit : x; });
+    return isNew ? list.concat([st.unit]) : list;
+  }
+  var mark = function(html, key){ return html.replace(/type="radio"/g, 'type="radio" data-u="' + key + '"'); };
+  function draw(key){
+    o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+      '<div class="dr-scroll">' +
+        '<div class="dr-title"><p class="eyebrow">' + esc(det.draft.name) + '</p><h2>' + (isNew ? esc(novo(A.unit)) : esc(u.name)) + '</h2><p>' + esc(A.unit.hint) + '.</p></div>' +
+        '<div class="form">' +
+          fld('ud-name', 'Nome', '<input id="ud-name" data-u="name" data-focus-key="ud-name" value="' + esc(st.unit.name) + '" placeholder="Ex.: AP 4 Terraço">') +
+          '<div class="fld"><span class="flabel">Tipo</span>' + mark(radios('ud-type', A.unit.types.map(function(t){ return [t, t]; }), st.unit.type), 'type') + '</div>' +
+          '<div class="grid2">' +
+            fld('ud-cap', esc(A.unit.capacity), '<input id="ud-cap" type="number" min="0" max="999" data-u="capacity" value="' + esc(st.unit.capacity) + '">') +
+            '<div class="fld"><span class="flabel">Estado</span>' + mark(radios('ud-status', [['active','Ativa'],['inactive','Inativa']], st.unit.status), 'status') + '</div>' +
+          '</div>' +
+          (F.ical ? '<p class="section-t" id="ud-cal">Calendários iCal</p>' +
+            '<p class="help" style="margin:-6px 0 0">Um por cada plataforma onde esta ' + lo(A.unit.s) + ' está anunciada. Podem estar ativos em simultâneo.</p>' +
+            calEditorHTML(st.unit, unitsView()) : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button>' +
+        '<button type="button" class="btn btn-primary" data-d="save">' + (isNew ? 'Criar ' + lo(A.unit.s) : 'Guardar ' + lo(A.unit.s)) + '</button></div>';
+    if (key){ var n = o.el.querySelector('[data-focus-key="' + key + '"]'); if (n) n.focus({preventScroll:true}); }
+  }
+  function rerender(key, async){
+    if (stack.indexOf(o) === -1){ if (async) pageCalRerender(null, true); return; }
+    var sc = $('.dr-scroll', o.el), y = sc ? sc.scrollTop : 0;
+    var a = document.activeElement, activeKey = a && o.el.contains(a) && a.dataset ? a.dataset.focusKey : null;
+    draw(key || activeKey);
+    var s2 = $('.dr-scroll', o.el); if (s2) s2.scrollTop = y;
+  }
+  draw(focus === 'cal' ? null : 'ud-name');
+  if (focus === 'cal') requestAnimationFrame(function(){
+    var s = $('#ud-cal', o.el); if (s) s.scrollIntoView({block:'start'});
+    var b = o.el.querySelector('[data-act-cal]'); if (b) b.focus({preventScroll:true});
+  });
+  function onField(e){
+    var t = e.target;
+    if (t.dataset.u){
+      if (t.type === 'radio' && !t.checked) return;
+      st.unit[t.dataset.u] = t.dataset.u === 'capacity' ? Math.max(0, parseInt(t.value, 10) || 0) : t.value;
+    } else if (t.dataset.cal != null) calInput(t, st.unit, o.el, unitsView());
+  }
+  o.el.addEventListener('input', onField);
+  o.el.addEventListener('change', onField);
+  o.el.addEventListener('click', function(e){
+    var cb = e.target.closest('[data-act-cal]');
+    if (cb){ calClick(cb, st.unit, rerender); return; }
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    if (b.dataset.d === 'close') closeOverlay(o);
+    if (b.dataset.d === 'save') save();
+  });
+  function save(){
+    var name = st.unit.name.trim(), errs = {};
+    if (!name) errs['ud-name'] = 'Indica o nome.';
+    else if (det.draft.units.some(function(x){ return x.id !== st.unit.id && norm(x.name) === norm(name); })) errs['ud-name'] = 'Já existe uma ' + lo(A.unit.s) + ' com este nome.';
+    if (!showErrs(o.el, errs)) return;
+    st.unit.name = name;
+    st.unit.calendars = st.unit.calendars.filter(function(c){ return hasUrl(c) || c.lastSync; });
+    if (isNew){ det.draft.units.push(st.unit); det.sel.push(st.unit.id); }
+    else det.draft.units[det.draft.units.findIndex(function(x){ return x.id === st.unit.id; })] = st.unit;
+    closeOverlay(o);
+    renderDetail();
+    toast((isNew ? name + ' criada' : name + ' atualizada') + ' (por guardar).');
+  }
+}
+function bulkApply(){
+  var det = UI.det, d = det.draft, F = A.features, n = det.sel.length;
+  if (!n) return;
+  var form = '<div class="form" style="margin-top:16px">';
+  if (F.team) form += '<div class="apply-opt"><label><input type="checkbox" data-opt="team">Equipa por defeito</label><div class="apply-body"><select class="ctl" id="ba-team" aria-label="Equipa">' + opts([['', 'Seguir o ' + lo(A.loc.s) + ' (' + teamName(d.team) + ')']].concat(TEAMS.map(function(t){ return [t.id, t.name]; })), '') + '</select></div></div>';
+  if (F.rate) form += '<div class="apply-opt"><label><input type="checkbox" data-opt="rate">Valor/hora</label><div class="apply-body"><div class="suffix"><input class="ctl" id="ba-rate" inputmode="decimal" placeholder="Vazio = seguir o ' + lo(A.loc.s) + ' (' + euro(d.rate) + ')"><span>€</span></div></div></div>';
+  if (F.laundry) form += '<div class="apply-opt"><label><input type="checkbox" data-opt="laundry"' + (d.laundryOn ? '' : ' disabled') + '>Setup de lavandaria' + (d.laundryOn ? '' : ' <span class="muted" style="font-weight:400">(desativada no ' + lo(A.loc.s) + ')</span>') + '</label><div class="apply-body">' +
+    radios('ba-laundry', [['setup','Usar o setup do ' + lo(A.loc.s) + ' (' + qtyTotal(d.laundryQty) + ' peças)'],['none','Não enviar para lavandaria']], 'setup') + '</div></div>';
+  form += '<div class="apply-opt"><label><input type="checkbox" data-opt="status">Estado</label><div class="apply-body">' + radios('ba-status', [['active','Ativa'],['inactive','Inativa']], 'active') + '</div></div>';
+  form += '<p class="help" style="margin:0">' + esc(selNames(det).join(', ')) + (F.ical ? '. Os calendários iCal não são alterados (são únicos por ' + lo(A.unit.s) + ').' : '') + '</p></div>';
+  openModal({
+    title:'Aplicar a ' + unitCount(n) + ' ' + (n === 1 ? 'selecionada' : 'selecionadas'),
+    body:'Escolhe o que queres aplicar. O resto mantém-se em cada ' + lo(A.unit.s) + '.',
+    confirm:'Aplicar', wide:true, form:form,
+    run:function(el){
+      var on = function(k){ var c = el.querySelector('[data-opt="' + k + '"]'); return c && c.checked; };
+      if (!['team','rate','laundry','status'].some(on)){ toast('Escolhe pelo menos uma opção.'); return false; }
+      var rate = F.rate && on('rate') ? $('#ba-rate', el).value.trim() : '';
+      if (rate && !/^\d{1,3}([.,]\d{1,2})?$/.test(rate)){ toast('Valor/hora inválido. Ex.: 18,00'); return false; }
+      d.units.forEach(function(u){
+        if (det.sel.indexOf(u.id) === -1) return;
+        if (on('team')) u.team = $('#ba-team', el).value || null;
+        if (on('rate')) u.rate = rate ? parseFloat(rate.replace(',', '.')) : null;
+        if (on('laundry')) u.laundry = $('[name=ba-laundry]:checked', el).value === 'setup' ? clone(d.laundryQty) : null;
+        if (on('status')) u.status = $('[name=ba-status]:checked', el).value;
+      });
+      renderDetail();
+      toast('Configuração aplicada a ' + unitCount(n) + ' (por guardar).');
+    }
+  });
+}
+
+/* =========================================================
+   Eventos globais
+   ========================================================= */
+device.addEventListener('click', function(e){
+  var cb = e.target.closest('[data-act-cal]');
+  if (cb && viewport.contains(cb) && UI.det){
+    var cu = UI.det.draft.units.find(function(u){ return u.id === cb.closest('[data-cal-unit]').dataset.calUnit; });
+    if (cu) calClick(cb, cu, pageCalRerender);
+    return;
+  }
+  var b = e.target.closest('[data-act]');
+  if (b && viewport.contains(b)){
+    if (b.tagName === 'A' || b.tagName === 'BUTTON') e.preventDefault();
+    var id = b.dataset.id;
+    switch (b.dataset.act){
+      case 'nav': toast('“' + b.dataset.label + '” ' + (b.dataset.label === 'Equipas' ? 'é o Módulo 2.' : 'fica disponível num passo seguinte.')); return;
+      case 'area': toast('Aplicação ativa: ' + A.label + '.'); return;
+      case 'app-menu': openMenu(b, [
+        {label:'Dados da empresa', icon:'building', run:function(){ toast('Dados da empresa — Módulo 1.'); }},
+        {label:'Definições', icon:'gear', run:function(){ toast('Definições — simulação.'); }}
+      ]); return;
+      case 'go-clients': go({name:'clients'}); return;
+      case 'go-locations': go({name:'locations', clientId:id || UI.view.clientId}); return;
+      case 'new-client': openClientForm(); return;
+      case 'menu-client': openMenu && clientMenu(b, client(id)); return;
+      case 'more-filters': moreFilters(b); return;
+      case 'clear-filters': UI.fc = {q:'', status:'', city:'', segment:'', billing:'', payment:''}; renderClients(); return;
+      case 'new-location': openLocationForm(id); return;
+      case 'menu-location': locationMenu(b, location_(id)); return;
+      case 'manage-location': go({name:'location', clientId:UI.view.clientId, locId:id}); return;
+      case 'det-tab': UI.det.tab = b.dataset.tab; renderDetail(); $('#dtab-' + UI.det.tab).focus({preventScroll:true}); return;
+      case 'save-location': saveLocation(); return;
+      case 'sel-all':
+        UI.det.sel = UI.det.sel.length === UI.det.draft.units.length ? [] : UI.det.draft.units.map(function(u){ return u.id; });
+        rerenderBody(); return;
+      case 'qty':
+        var q = UI.det.draft.laundryQty, k = b.dataset.item;
+        q[k] = Math.max(0, Math.min(20, (q[k] || 0) + Number(b.dataset.d)));
+        updateDirty(); rerenderBody(); return;
+      case 'cal-sync-all': syncMany(UI.det.draft.units, 'Nenhuma ' + lo(A.unit.s) + ' tem calendários com URL.'); return;
+      case 'cal-sync-sel': syncMany(selUnits(UI.det), 'As ' + lo(A.unit.p) + ' selecionadas não têm calendários com URL.'); return;
+      case 'edit-unit': openUnitDrawer(UI.det.draft.units.find(function(u){ return u.id === id; })); return;
+      case 'new-unit': openUnitDrawer(null); return;
+      case 'menu-unit': unitMenu(b, UI.det.draft.units.find(function(u){ return u.id === id; })); return;
+      case 'bulk-apply': bulkApply(); return;
+    }
+    return;
+  }
+  var row = e.target.closest('.crow');
+  if (row && !e.target.closest('button')) openClient(row.dataset.client);
+});
+viewport.addEventListener('keydown', function(e){
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('crow')){ e.preventDefault(); openClient(e.target.dataset.client); }
+  if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && e.target.getAttribute && e.target.getAttribute('role') === 'tab' && UI.det){
+    var tabs = $$('#detTabs [role=tab]'), i = tabs.indexOf(e.target);
+    var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+    UI.det.tab = next.dataset.tab; renderDetail(); $('#dtab-' + UI.det.tab).focus();
+  }
+});
+page.addEventListener('input', function(e){
+  var t = e.target;
+  if (t.dataset.fc != null){ UI.fc[t.dataset.fc] = t.value; renderClientRows(); return; }
+  if (UI.view.name === 'location' && !calPageInput(e)) onDetailInput(e);
+});
+page.addEventListener('change', function(e){
+  var t = e.target;
+  if (t.dataset.fc != null){ UI.fc[t.dataset.fc] = t.value; renderClientRows(); return; }
+  if (t.dataset.sort != null){ UI.sort = t.value; renderClientRows(); return; }
+  if (UI.view.name === 'location' && !calPageInput(e)) onDetailInput(e);
+});
+
+$('#appSel').addEventListener('change', function(e){
+  UI.app = e.target.value; A = APPS[UI.app];
+  closeAll();
+  if (UI.det && !A.features.laundry && UI.det.tab === 'laundry') UI.det.tab = 'config';
+  render();
+  toast(UI.app === 'limpezas' ? 'Configuração Limpezas: alojamentos, iCal e lavandaria.' : 'Mesma estrutura com a terminologia de ' + A.label + '. Campos de Limpezas ocultos.');
+});
+$('#widthSeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-w]'); if (!b) return;
+  $$('#widthSeg button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+  $('#stage').dataset.w = b.dataset.w; closeMenu();
+});
+$('#resetBtn').addEventListener('click', function(){
+  D = seed(); UI.fc = {q:'', status:'', city:'', segment:'', billing:'', payment:''}; UI.sort = 'name';
+  go({name:'clients'}, true); toast('Dados de demonstração repostos.');
+});
+
+$('#appMenuBtn').innerHTML = ic('menu');
+render();
+})();
+</script>
+</body>
+</html>

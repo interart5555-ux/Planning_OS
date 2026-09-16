@@ -1,0 +1,1618 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipas · AppOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --green:#17643e; --green-h:#0f4f30; --green-soft:#e9f4ee; --green-line:#cde5d6;
+    --ink:#15181c; --ink-2:#3d444d; --mute:#6b7280; --faint:#9aa1ab;
+    --line:#e6e8ec; --line-2:#d3d8de; --sunk:#f6f7f8; --surface:#ffffff; --ground:#e9ecef;
+    --ok-bg:#e7f5ec; --ok-fg:#17643e; --ok-dot:#2e9e5b;
+    --warn-bg:#fdf3d7; --warn-fg:#80570a; --warn-dot:#e0a30b;
+    --bad-bg:#fdecea; --bad-fg:#b42318; --bad-dot:#e5484d;
+    --dark-bg:#e8eaed; --dark-fg:#2b3139; --dark-dot:#3b424b;
+    --sh:0 1px 2px rgba(17,24,39,.04), 0 8px 24px -16px rgba(17,24,39,.22);
+    --sh-pop:0 18px 50px -18px rgba(17,24,39,.38), 0 2px 6px rgba(17,24,39,.06);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.45 "Public Sans","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .i{width:18px;height:18px;flex:none}
+
+  /* ---------- pré-visualização ---------- */
+  .shell{display:flex;flex-direction:column;height:100dvh}
+  .chrome{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-block:10px;padding-inline:16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .chrome h2{margin:0 auto 0 0;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .seg{display:flex;gap:2px;background:var(--sunk);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;font-size:12.5px;font-weight:500;color:var(--ink-2);padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(17,24,39,.14)}
+  .seg-lbl{font-size:12px;color:var(--mute)}
+  .chrome .reset{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500}
+  .stage{flex:1;min-height:0;display:flex;justify-content:center;padding:16px}
+  .device{position:relative;width:100%;max-width:1440px;height:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--sh);container:app / inline-size;transition:max-width .25s ease}
+  .stage[data-w="390"] .device{max-width:390px}
+  .stage[data-w="768"] .device{max-width:768px}
+  .viewport{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain}
+  .layer{position:absolute;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+  .layer>*{pointer-events:auto}
+  @media (max-width:700px){
+    .stage{padding:0} .device{border:0;border-radius:0}
+    .chrome .w-seg{display:none} .chrome h2{flex-basis:100%}
+  }
+
+  /* ---------- topo ---------- */
+  .topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-inline:28px;min-height:64px}
+  .logo{font-weight:700;font-size:22px;letter-spacing:-.035em;color:var(--ink);text-decoration:none}
+  .logo span{color:var(--green)}
+  .nav{display:flex;gap:2px;height:64px}
+  .nav a{display:flex;align-items:center;padding:0 14px;font-size:14px;font-weight:500;color:var(--ink-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .nav a:hover{color:var(--ink)}
+  .nav a[aria-current="page"]{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .tb-right{display:flex;justify-content:flex-end;align-items:center;gap:10px}
+  .chip-mod{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:0;border-radius:9px;background:var(--green);color:#fff;font-weight:600;font-size:14px}
+  .chip-mod:hover{background:var(--green-h)}
+  .av{display:inline-grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:#eef0f3;color:var(--ink-2);font-size:11.5px;font-weight:600;letter-spacing:.02em}
+  .av-top{width:36px;height:36px;border:0;font-size:12px}
+  .av-sm{width:28px;height:28px;font-size:10px;letter-spacing:0}
+  .av-lg{width:64px;height:64px;font-size:21px}
+  .av-lead{background:var(--green-soft);color:var(--green)}
+  .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:var(--ink-2)}
+  .icon-btn:hover{background:var(--sunk);color:var(--ink)}
+  .icon-btn[aria-expanded="true"]{background:var(--sunk)}
+  @container app (max-width:999px){
+    .topbar{grid-template-columns:1fr auto;padding-inline:16px}
+    .nav{grid-column:1 / -1;order:3;height:46px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:6px;border-top:1px solid var(--line)}
+  }
+  @container app (max-width:420px){ .chip-mod{padding:0 11px} }
+
+  /* ---------- página ---------- */
+  .page{max-width:1200px;margin:0 auto;padding-block:30px 56px;padding-inline:32px}
+  @container app (max-width:759px){ .page{padding-inline:16px;padding-block:22px 40px} }
+  .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+  .eyebrow{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  h1{margin:6px 0 0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.025em}
+  .lede{margin:6px 0 0;color:var(--ink-2);font-size:14.5px}
+  .head-actions{display:flex;gap:10px;flex-wrap:wrap}
+  @container app (max-width:559px){
+    h1{font-size:26px}
+    .head-actions{width:100%} .head-actions .btn{flex:1}
+  }
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:10px;border:1px solid transparent;font-size:14px;font-weight:600;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+  .btn:focus-visible,.icon-btn:focus-visible,.chip-mod:focus-visible,.tab:focus-visible,.stat:focus-visible,.link:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .btn-primary{background:var(--green);color:#fff}
+  .btn-primary:hover{background:var(--green-h)}
+  .btn-outline{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+  .btn-outline:hover{border-color:var(--faint)}
+  .btn-outline[aria-pressed="true"]{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+  .btn-soft{background:var(--green-soft);color:var(--green)}
+  .btn-soft:hover{background:#dcede3}
+  .btn-danger{background:var(--surface);border-color:#f1b8b3;color:var(--bad-fg)}
+  .btn-danger:hover{background:var(--bad-bg)}
+  .btn-danger-solid{background:#b42318;color:#fff}
+  .btn-danger-solid:hover{background:#951d14}
+  .btn-ghost{background:transparent;color:var(--ink-2)}
+  .btn-ghost:hover{background:var(--sunk)}
+  .btn-sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+  .btn-sm .i{width:15px;height:15px}
+  .btn[disabled]{opacity:.6;cursor:default}
+  .link{border:0;background:none;padding:0;color:var(--green);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--green-line)}
+  .link:hover{text-decoration-color:var(--green)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  .stat{display:flex;align-items:center;gap:14px;text-align:left;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);transition:border-color .15s}
+  .stat:hover{border-color:var(--green-line)}
+  .stat-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--green-soft);color:var(--green);flex:none}
+  .stat-v{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  .stat-l{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-top:4px}
+  .stat-s{display:block;font-size:12px;color:var(--mute);margin-top:1px}
+  .stat-txt{min-width:0}
+  @container app (min-width:640px) and (max-width:999px){
+    .stat{flex-direction:column;align-items:flex-start;gap:10px}
+  }
+  @container app (max-width:639px){
+    .stats{grid-template-columns:1fr;gap:8px}
+    .stat{padding:10px 14px}
+    .stat-v{order:3;margin-left:auto;font-size:22px}
+    .stat-ic{width:34px;height:34px}
+  }
+
+  .tabs{display:flex;gap:4px;margin-top:26px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .tab{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:8px 8px 0 0;background:transparent;color:var(--ink-2);font-size:14px;font-weight:500;white-space:nowrap}
+  .tab:hover{color:var(--ink);background:var(--sunk)}
+  .tab[aria-selected="true"]{background:var(--green-soft);color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .count{display:inline-grid;place-items:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:#eef0f3;color:var(--ink-2);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+  .tab[aria-selected="true"] .count{background:#fff;color:var(--green)}
+
+  /* ---------- barra de filtros ---------- */
+  .toolbar{display:grid;grid-template-columns:minmax(220px,1.3fr) 3fr;gap:10px;margin-top:20px}
+  .filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  @container app (max-width:899px){ .toolbar{grid-template-columns:1fr} }
+  @container app (max-width:559px){
+    .filters{display:flex;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+    .filters select{min-width:170px}
+  }
+  .search{position:relative;display:block}
+  .search .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);width:17px;height:17px}
+  .toolbar .search input{padding-left:38px}
+  .ctl,.toolbar input,.toolbar select{width:100%;height:42px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);font-size:14px;transition:border-color .15s,box-shadow .15s}
+  select.ctl,.toolbar select,.fld select{appearance:none;padding-right:34px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%233d444d' stroke-width='1.6'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E") no-repeat right 12px center/11px}
+  .ctl:hover,.toolbar input:hover,.toolbar select:hover{border-color:var(--faint)}
+  .ctl:focus,.toolbar input:focus,.toolbar select:focus,.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(23,100,62,.14)}
+  input::placeholder,textarea::placeholder{color:var(--faint)}
+
+  /* ---------- tabelas ---------- */
+  .tablewrap{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--sh)}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{text-align:left;font-size:12.5px;font-weight:500;color:var(--mute);background:var(--sunk);padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .tbl td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tbody tr{cursor:pointer;transition:background .12s}
+  .tbl tbody tr:hover{background:#fafbfb}
+  .tbl tbody tr:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+  .tbl .n{display:none}
+  .tbl .th-act,.tbl .c-act{width:56px;text-align:right;padding-right:10px}
+  .tbl .muted{color:var(--ink-2)}
+  .tbl tr.row-empty{cursor:default} .tbl tr.row-empty:hover{background:none}
+  .who{display:flex;align-items:center;gap:12px;min-width:0}
+  .who b{font-weight:600;display:block}
+  .who small{display:block;color:var(--mute);font-size:12.5px}
+  .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:6px;background:#eef0f3;color:var(--ink-2);font-size:11px;font-weight:600;vertical-align:1px}
+  .num{font-variant-numeric:tabular-nums}
+  @container app (max-width:759px){
+    .tbl thead{display:none}
+    .tbl,.tbl tbody{display:block}
+    .tbl tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;padding:14px 8px 14px 14px;border-bottom:1px solid var(--line)}
+    .tbl tbody tr:last-child{border-bottom:0}
+    .tbl td{display:block;padding:0;border:0}
+    .tbl .w{display:none}
+    .tbl .n{display:block}
+    .tbl td:not(.c-act){grid-column:1}
+    .tbl .c-act{grid-column:2;grid-row:1 / span 3;width:auto;padding:0}
+    .tbl .c-sub,.tbl .c-pill{padding-left:44px}
+    .tbl .c-sub{color:var(--ink-2);font-size:13px}
+    .tbl tr.row-empty{display:block}
+  }
+  @container app (max-width:959px){
+    .tbl-abs thead{display:none}
+    .tbl-abs,.tbl-abs tbody{display:block}
+    .tbl-abs tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;padding:14px 8px 14px 14px;border-bottom:1px solid var(--line)}
+    .tbl-abs tbody tr:last-child{border-bottom:0}
+    .tbl-abs td{display:block;padding:0;border:0}
+    .tbl-abs .w{display:none}
+    .tbl-abs .n{display:block}
+    .tbl-abs td:not(.c-act){grid-column:1}
+    .tbl-abs .c-act{grid-column:2;grid-row:1 / span 3;width:auto;padding:0}
+    .tbl-abs .c-sub,.tbl-abs .c-pill{padding-left:44px}
+    .tbl-abs .c-sub{color:var(--ink-2);font-size:13px}
+    .tbl-abs tr.row-empty{display:block}
+  }
+  .empty{padding:34px 16px;text-align:center;color:var(--mute)}
+  .empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:500;white-space:nowrap}
+  .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .pill.ok{background:var(--ok-bg);color:var(--ok-fg)} .pill.ok::before{background:var(--ok-dot)}
+  .pill.warn{background:var(--warn-bg);color:var(--warn-fg)} .pill.warn::before{background:var(--warn-dot)}
+  .pill.bad{background:var(--bad-bg);color:var(--bad-fg)} .pill.bad::before{background:var(--bad-dot)}
+  .pill.dark{background:var(--dark-bg);color:var(--dark-fg)} .pill.dark::before{background:var(--dark-dot)}
+  .pill.dark.fail::before{border-radius:2px;transform:rotate(45deg)}
+  .pill.dark.susp::before{width:3px;height:9px;border-radius:1px;box-shadow:4px 0 0 var(--dark-dot);margin-right:3px}
+
+  .foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;margin-top:14px;color:var(--mute);font-size:13px}
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .legend .pill{height:22px;font-size:11.5px;padding:0 8px;cursor:help}
+
+  .callout{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:20px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--sunk)}
+  .callout .i{color:var(--green)}
+  .callout-txt{flex:1;min-width:220px}
+  .callout b{display:block;font-weight:600}
+  .callout p{margin:2px 0 0;color:var(--ink-2);font-size:13px}
+  .callout.warn{background:#fffaf0;border-color:#f3dfae}
+  .callout.warn .i{color:var(--warn-fg)}
+
+  .section-h{display:flex;align-items:baseline;gap:10px;margin:28px 0 0}
+  .section-h h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .section-h span{color:var(--mute);font-size:13px}
+  .flash{animation:flash 1.4s ease}
+  @keyframes flash{0%,40%{box-shadow:0 0 0 3px rgba(23,100,62,.25)}100%{box-shadow:var(--sh)}}
+  .more-row{display:flex;justify-content:center;padding:10px;border-top:1px solid var(--line);background:var(--surface)}
+
+  /* ---------- equipas ---------- */
+  .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px;margin-top:20px}
+  .team-card{display:flex;flex-direction:column;gap:14px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh)}
+  .team-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .team-top h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .team-top p{margin:2px 0 0;color:var(--mute);font-size:13px}
+  .team-top .icon-btn{margin:-6px -8px 0 0}
+  .lbl{display:block;font-size:12px;color:var(--mute);margin-bottom:6px}
+  .lead{display:flex;align-items:center;gap:10px;font-weight:500}
+  .lead.none{color:var(--bad-fg);font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:7px;background:var(--sunk);border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+  .chip .i{width:13px;height:13px;color:var(--mute)}
+  .team-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+  .stack{display:flex;align-items:center}
+  .stack .av{border:2px solid var(--surface);margin-left:-7px}
+  .stack .av:first-child{margin-left:0}
+  .team-new{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:230px;border:1.5px dashed var(--line-2);border-radius:14px;background:transparent;color:var(--ink-2);font-weight:600}
+  .team-new:hover{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+  .team-new .plus{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--green-soft);color:var(--green)}
+
+  /* ---------- camadas: painel, modal, menu, toast ---------- */
+  .backdrop{position:absolute;inset:0;background:rgba(17,24,39,.4);animation:fade .18s ease}
+  .drawer{position:absolute;top:0;right:0;bottom:0;width:min(540px,100%);background:var(--surface);box-shadow:var(--sh-pop);display:flex;flex-direction:column;animation:slide .24s cubic-bezier(.2,.8,.2,1);container:dr / inline-size}
+  .dr-scroll{flex:1;overflow:auto;padding:22px 24px 28px;overscroll-behavior:contain}
+  .dr-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid var(--line);background:var(--surface)}
+  .dr-close{position:absolute;top:12px;right:12px;z-index:2}
+  .dr-title{padding-right:36px}
+  .dr-title h2{margin:4px 0 0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .dr-title p{margin:6px 0 0;color:var(--ink-2)}
+  @container dr (max-width:479px){ .dr-scroll{padding:18px 16px 24px} .dr-foot{padding:12px 16px} .dr-foot .btn{flex:1} }
+  .modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));background:var(--surface);border-radius:14px;box-shadow:var(--sh-pop);padding:22px;animation:pop .18s ease}
+  .modal h2{margin:0;font-size:18px;font-weight:700}
+  .modal p{margin:8px 0 0;color:var(--ink-2)}
+  .modal .acts{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:20px}
+  .menu{position:absolute;min-width:220px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-pop);animation:pop .12s ease;z-index:5}
+  .menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;text-align:left;font-size:14px;color:var(--ink)}
+  .menu-item .i{width:16px;height:16px;color:var(--mute)}
+  .menu-item:hover,.menu-item:focus-visible{background:var(--sunk);outline:none}
+  .menu-item.danger,.menu-item.danger .i{color:var(--bad-fg)}
+  .menu-sep{height:1px;background:var(--line);margin:5px 4px}
+  .toast{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:11px;background:#16201b;color:#fff;font-size:14px;box-shadow:var(--sh-pop);animation:up .22s ease;z-index:9}
+  .toast .i{color:#6fd49d}
+  @keyframes fade{from{opacity:0}}
+  @keyframes slide{from{transform:translateX(40px);opacity:0}}
+  @keyframes pop{from{opacity:0;scale:.97}}
+  @keyframes up{from{opacity:0;translate:0 10px}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- detalhe do colaborador ---------- */
+  .p-head{display:flex;gap:16px;align-items:center;padding-right:36px}
+  .p-head h2{margin:0;font-size:21px;font-weight:700;letter-spacing:-.02em}
+  .p-head p{margin:2px 0 0;color:var(--ink-2)}
+  .p-head p.m{color:var(--mute);font-size:13px}
+  .acc{margin-top:16px}
+  .acc p{margin:6px 0 0;color:var(--ink-2);font-size:13px}
+  .acts-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .subtabs{display:flex;gap:4px;margin-top:22px;border-bottom:1px solid var(--line)}
+  .subtabs button{padding:9px 12px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;color:var(--ink-2);font-weight:500}
+  .subtabs button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+  .box{margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  .box-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .box-h h3{margin:0;font-size:14.5px;font-weight:600;flex:1}
+  .box-h .i{color:var(--green);width:17px;height:17px}
+  .kv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:10px 16px;padding:9px 0;border-top:1px solid var(--line)}
+  .kv:first-of-type{border-top:0}
+  .kv span{color:var(--ink)} .kv span.s{display:block;color:var(--mute);font-size:12.5px}
+  .kv .end{text-align:right}
+  .dl{margin:0}
+  .dl div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+  .dl div:first-child{border-top:0}
+  .dl dt{color:var(--mute)} .dl dd{margin:0;overflow-wrap:anywhere}
+  @container dr (max-width:479px){ .dl div{grid-template-columns:1fr;gap:2px} }
+  .rule{display:flex;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--sunk);color:var(--ink-2);font-size:13px}
+  .rule .i{color:var(--mute);width:17px;height:17px;margin-top:1px}
+  .sim{margin-top:18px;padding:12px 14px;border:1px dashed var(--line-2);border-radius:10px;font-size:12.5px;color:var(--mute)}
+  .sim b{font-weight:600;color:var(--ink-2)}
+  .sim .row{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px}
+  .muted-empty{color:var(--mute);font-size:13px;padding:4px 0}
+
+  /* ---------- formulários ---------- */
+  .form{display:flex;flex-direction:column;gap:16px;margin-top:22px}
+  .fld label,.fld .flabel{display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:var(--ink-2)}
+  .fld .opt{color:var(--faint);font-weight:400}
+  .fld input,.fld select,.fld textarea{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);font-size:15px;transition:border-color .15s,box-shadow .15s}
+  .fld textarea{padding:10px 12px;min-height:76px;resize:vertical}
+  .fld input[aria-invalid="true"],.fld select[aria-invalid="true"]{border-color:var(--bad-fg);background:#fffafa}
+  .help{margin:6px 0 0;font-size:12.5px;color:var(--mute)}
+  .err{margin:6px 0 0;font-size:12.5px;font-weight:500;color:var(--bad-fg)}
+  .err:empty{display:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @container dr (max-width:439px){ .grid2{grid-template-columns:1fr} }
+  .suffix{position:relative} .suffix input{padding-right:48px} .suffix span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:14px}
+  .steps{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12.5px;color:var(--mute)}
+  .steps span{display:inline-flex;align-items:center;gap:6px}
+  .steps b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#eef0f3;font-size:11px;color:var(--ink-2)}
+  .steps .on{color:var(--green);font-weight:600} .steps .on b{background:var(--green);color:#fff}
+  .steps .done b{background:var(--green-soft);color:var(--green)}
+  .steps i{flex:0 0 28px;height:1px;background:var(--line-2)}
+  .radios{display:flex;flex-wrap:wrap;gap:8px}
+  .radios label{margin:0;position:relative}
+  .radios input{position:absolute;opacity:0;inset:0;margin:0;min-height:0;cursor:pointer}
+  .radios span{display:inline-flex;align-items:center;height:36px;padding:0 13px;border:1px solid var(--line-2);border-radius:999px;font-size:13.5px;font-weight:500;color:var(--ink-2);background:var(--surface)}
+  .radios input:checked+span{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:600}
+  .radios input:focus-visible+span{box-shadow:0 0 0 3px rgba(23,100,62,.18)}
+  .switch-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);cursor:pointer}
+  .switch-row input{position:absolute;opacity:0;width:1px;height:1px}
+  .sw{position:relative;flex:none;width:40px;height:24px;border-radius:999px;background:#c9ced5;transition:background .15s;margin-top:1px}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+  input:checked+.sw{background:var(--green)} input:checked+.sw::after{transform:translateX(16px)}
+  input:focus-visible+.sw{box-shadow:0 0 0 3px rgba(23,100,62,.2)}
+  .switch-row b{display:block;font-weight:600;font-size:14px}
+  .switch-row small{display:block;color:var(--mute);font-size:12.5px;margin-top:1px}
+  .sw-sm{width:34px;height:20px} .sw-sm::after{width:14px;height:14px} input:checked+.sw-sm::after{transform:translateX(14px)}
+  .summary{padding:14px 16px;border-radius:12px;background:var(--green-soft);border:1px solid var(--green-line)}
+  .summary h3{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--green)}
+  .sum-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14px}
+  .sum-row span{color:var(--ink-2)} .sum-row b{font-weight:600;text-align:right}
+  .note{display:flex;gap:8px;margin:10px 0 0;font-size:12.5px;color:var(--ink-2)}
+  .note .i{width:15px;height:15px;color:var(--green);margin-top:1px}
+  .warnbox{display:flex;gap:10px;padding:11px 13px;border-radius:10px;background:#fffaf0;border:1px solid #f3dfae;color:var(--warn-fg);font-size:13px}
+  .warnbox .i{width:17px;height:17px}
+
+  .okbanner{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--ok-bg);color:var(--ok-fg)}
+  .okbanner .ic{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;flex:none}
+  .okbanner b{display:block} .okbanner span{font-size:13px;color:var(--ink-2)}
+  .method{display:flex;gap:14px;align-items:center;margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--sunk)}
+  .method b{display:block;font-weight:600} .method span{font-size:12.5px;color:var(--ink-2)}
+  .pin{display:flex;gap:5px;flex:none}
+  .pin i{display:grid;place-items:center;flex:none;width:26px;height:32px;border-radius:6px;border:1px solid var(--line-2);background:#fff;font-style:normal;font-weight:700;color:var(--green)}
+  .keyic{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:#fff;border:1px solid var(--line-2);color:var(--green);flex:none}
+
+  /* ---------- detalhe de equipa ---------- */
+  .sec{padding-top:18px;margin-top:18px;border-top:1px solid var(--line)}
+  .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .sec-h h3{margin:0;font-size:14.5px;font-weight:600}
+  .sec-h span{font-size:12.5px;color:var(--mute)}
+  .mlist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .mrow{display:flex;align-items:center;gap:10px;padding:9px 8px 9px 12px;border-top:1px solid var(--line)}
+  .mrow:first-child{border-top:0}
+  .mrow .grow{flex:1;min-width:0}
+  .mrow b{font-weight:500;display:block}
+  .mrow small{display:block;color:var(--mute);font-size:12px}
+  .mrow small.move{color:var(--warn-fg)}
+  .addrow{display:flex;gap:8px;margin-top:10px}
+  .addrow>*:first-child{flex:1;min-width:0}
+  .chip-x{border:0;background:none;padding:0 0 0 2px;color:var(--mute);display:inline-grid;place-items:center}
+  .chip-x:hover{color:var(--bad-fg)}
+  .toggle-chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font-size:13px;font-weight:500;color:var(--ink-2)}
+  .toggle-chip .i{width:14px;height:14px}
+  .toggle-chip[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+  .def{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);cursor:pointer;white-space:nowrap;position:relative}
+  .def input{position:absolute;opacity:0;width:1px;height:1px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="chrome">
+    <h2>Módulo 2 · Equipas — simulação</h2>
+    <span class="seg-lbl" id="modeLbl">Empresa</span>
+    <div class="seg" role="group" aria-labelledby="modeLbl" id="modeSeg">
+      <button type="button" data-mode="micro" aria-pressed="true">Microempresa</button>
+      <button type="button" data-mode="separate" aria-pressed="false">Responsabilidades separadas</button>
+    </div>
+    <div class="seg w-seg" role="group" aria-label="Largura de pré-visualização" id="widthSeg">
+      <button type="button" data-w="390" aria-pressed="false">Telemóvel</button>
+      <button type="button" data-w="768" aria-pressed="false">Tablet</button>
+      <button type="button" data-w="full" aria-pressed="true">Desktop</button>
+    </div>
+    <button type="button" class="reset" id="resetBtn">Repor dados</button>
+  </div>
+
+  <div class="stage" id="stage" data-w="full">
+    <div class="device" id="device">
+      <div class="viewport" id="viewport">
+        <header class="topbar">
+          <a class="logo" href="#" data-act="nav" data-label="Início">App<span>OS</span></a>
+          <nav class="nav" aria-label="Principal">
+            <a href="#" data-act="nav" data-label="Hoje">Hoje</a>
+            <a href="#" data-act="nav" data-label="Planeamento">Planeamento</a>
+            <a href="#" aria-current="page">Equipas</a>
+            <a href="#" data-act="nav" data-label="Clientes">Clientes</a>
+            <a href="#" data-act="nav" data-label="Rendimentos">Rendimentos</a>
+          </nav>
+          <div class="tb-right">
+            <button type="button" class="chip-mod" data-act="area">✦ Limpezas</button>
+            <span class="av av-top" title="Paula Santos">PS</span>
+            <button type="button" class="icon-btn" data-act="app-menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false"></button>
+          </div>
+        </header>
+
+        <main class="page">
+          <section class="head">
+            <div>
+              <p class="eyebrow">Limpezas · Equipas</p>
+              <h1>Equipa</h1>
+              <p class="lede">Gere colaboradores, equipas, ausências e acessos à aplicação.</p>
+            </div>
+            <div class="head-actions" id="headActions"></div>
+          </section>
+          <section class="stats" id="stats" aria-label="Resumo"></section>
+          <div class="tabs" role="tablist" aria-label="Secções de Equipas" id="tabs"></div>
+          <section id="panel" role="tabpanel"></section>
+        </main>
+      </div>
+      <div class="layer" id="layer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   Utilitários
+   ========================================================= */
+var TODAY = '2026-04-13';               // data fixa de demonstração
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function norm(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function uid(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+var ICONS = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  more:'<circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  send:'<path d="M21 3 10 14"/><path d="M21 3 14.5 21l-4.5-7-7-4.5z"/>',
+  pause:'<path d="M9 5v14M15 5v14"/>',
+  play:'<path d="M7 5v14l11-7z"/>',
+  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pin:'<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  building:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/>',
+  home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  check:'<path d="m5 12 5 5 9-10"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>',
+  history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M16 7l3 3M18 5l2 2"/>',
+  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  restore:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  x2:'<path d="M15 9l-6 6M9 9l6 6"/><circle cx="12" cy="12" r="9"/>'
+};
+function ic(name, cls){
+  return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+}
+
+/* ---- datas ---- */
+var MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var WDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function dt(s){ return new Date(s + 'T00:00:00'); }
+function iso(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function addDays(s, n){ var d = dt(s); d.setDate(d.getDate() + n); return iso(d); }
+function dayCount(a, b){ return Math.round((dt(b) - dt(a)) / 864e5) + 1; }
+function fmtDay(s, year){ var d = dt(s); return d.getDate() + ' ' + MONTHS[d.getMonth()] + (year ? ' ' + d.getFullYear() : ''); }
+function fmtRange(a, b){ return a === b ? fmtDay(a, true) : fmtDay(a) + ' – ' + fmtDay(b, true); }
+function relDay(s){
+  var diff = dayCount(TODAY, s) - 1, d = dt(s);
+  if (diff === 0) return 'Hoje, ' + fmtDay(s);
+  if (diff === 1) return 'Amanhã, ' + fmtDay(s);
+  return WDAYS[d.getDay()] + ', ' + fmtDay(s);
+}
+function mins(t){ var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1]); }
+function fmtH(h){ var w = Math.floor(h), m = Math.round((h - w) * 60); return m ? w + ' h ' + pad(m) : w + ' h'; }
+function euro(v){ return v == null || v === '' ? '—' : Number(v).toFixed(2).replace('.', ',') + ' €/h'; }
+
+/* =========================================================
+   Dados de demonstração (sem persistência)
+   ========================================================= */
+var CLIENTS = [
+  {id:'clinica', name:'Clínica Saúde+'}, {id:'tejo', name:'Escritórios Tejo'},
+  {id:'flores', name:'Condomínio das Flores'}, {id:'ribeira', name:'Hotel Ribeira'},
+  {id:'atlantico', name:'Ginásio Atlântico'}, {id:'aurora', name:'Colégio Aurora'}
+];
+var ABS_TYPES = {ferias:'Férias', folga:'Folga', indisponibilidade:'Indisponibilidade', formacao:'Formação', consulta:'Consulta médica', baixa:'Baixa'};
+var ABS_STATUS = {pending:['warn','Pendente'], approved:['ok','Aprovada'], rejected:['bad','Recusada']};
+var ACCESS = {
+  active:   {cls:'ok',        label:'Acesso ativo',       desc:'Ativou a conta e pode entrar na aplicação.'},
+  sent:     {cls:'warn',      label:'Acesso enviado',     desc:'O email foi enviado e aguarda ativação.'},
+  none:     {cls:'bad',       label:'Sem acesso enviado', desc:'Existe na equipa, mas ainda não recebeu acesso à aplicação.'},
+  suspended:{cls:'dark susp', label:'Suspenso',           desc:'O acesso à aplicação foi suspenso.'},
+  failed:   {cls:'dark fail', label:'Falha no envio',     desc:'O envio do email falhou. Confirma o endereço e reenvia.'}
+};
+
+function seed(){
+  function P(id, name, email, role, team, access, rate, jobs, phone, since){
+    return {id:id, name:name, email:email, role:role, team:team, access:access, rate:rate, jobs:jobs, phone:phone, since:since, archived:false, sentAt:null};
+  }
+  return {
+    people: [
+      P('paula','Paula Santos','paula.santos@brilho.pt','admin',null,'active',null,0,'912 345 678','2023-02-01'),
+      P('dora','Dora Martins','dora.martins@email.pt','collab','norte','active',9.5,184,'913 220 481','2023-05-15'),
+      P('luis','Luís Carvalho','luis.carvalho@email.pt','collab','norte','sent',8.5,23,'915 004 312','2025-11-03'),
+      P('andreia','Andreia Ferreira','andreia.ferreira@email.pt','collab','norte','active',8.5,96,'936 118 204','2024-03-11'),
+      P('tiago','Tiago Moreira','tiago.moreira@email.pt','collab','norte','active',8,41,'926 441 090','2025-01-20'),
+      P('sofia','Sofia Lopes','sofia.lopes@email.pt','collab','norte','sent',8,12,'918 770 213','2026-02-02'),
+      P('joao','João Rocha','joao.rocha@email.pt','collab','centro','active',9.5,152,'912 887 610','2023-06-01'),
+      P('nena','Nena Costa','nena.costa@email.pt','collab','centro','sent',8.5,0,'934 551 872','2026-03-30'),
+      P('pedro','Pedro Costa','pedro.costa@email.pt','collab','centro','failed',8,64,'917 302 118','2024-09-09'),
+      P('teresa','Teresa Matos','teresa.matos@email.pt','collab','centro','active',8.5,77,'963 210 457','2024-04-22'),
+      P('ana','Ana Silva','ana.silva@email.pt','collab','sul','active',9.5,131,'914 663 205','2023-09-18'),
+      P('maria','Maria Fernandes','maria.fernandes@email.pt','collab','sul','suspended',8.5,58,'912 095 334','2024-06-03'),
+      P('catia','Cátia Teixeira','catia.teixeira@email.pt','collab','sul','active',8,35,'939 400 128','2025-04-07'),
+      P('rui','Rui Ferreira','rui.ferreira@email.pt','collab','sul','none',8,9,'927 118 546','2026-01-12'),
+      P('rita','Rita Silva','rita.silva@email.pt','collab',null,'none',8,0,'911 203 667','2026-04-06')
+    ],
+    teams: [
+      {id:'norte', name:'Equipa Norte', lead:'dora', zones:['Matosinhos','Foz do Douro'], clients:['clinica','tejo'], aloj:['al-foz','al-mat']},
+      {id:'centro', name:'Equipa Centro', lead:'joao', zones:['Porto – Baixa','Boavista'], clients:['flores','ribeira'], aloj:['al-rib','al-bai']},
+      {id:'sul', name:'Equipa Sul', lead:'ana', zones:['Vila Nova de Gaia'], clients:['atlantico'], aloj:['al-gaia']}
+    ],
+    aloj: [
+      {id:'al-foz', name:'AL Foz Mar T2', zone:'Foz do Douro', def:'norte'},
+      {id:'al-mat', name:'AL Matosinhos Praia T1', zone:'Matosinhos', def:'norte'},
+      {id:'al-rib', name:'AL Ribeira Loft', zone:'Porto – Ribeira', def:'centro'},
+      {id:'al-bai', name:'AL Baixa Studio', zone:'Porto – Baixa', def:'centro'},
+      {id:'al-gaia', name:'AL Gaia Vista T1', zone:'Vila Nova de Gaia', def:'sul'},
+      {id:'al-bol', name:'AL Bolhão Suite', zone:'Porto – Bolhão', def:null}
+    ],
+    absences: [
+      {id:'a1', person:'ana', type:'ferias', start:'2026-04-22', end:'2026-04-25', allDay:true, from:'', to:'', status:'pending', note:''},
+      {id:'a2', person:'luis', type:'formacao', start:'2026-05-15', end:'2026-05-15', allDay:false, from:'10:00', to:'12:00', status:'approved', note:'Formação de produtos'},
+      {id:'a3', person:'maria', type:'ferias', start:'2026-05-12', end:'2026-05-16', allDay:true, from:'', to:'', status:'pending', note:''},
+      {id:'a4', person:'joao', type:'consulta', start:'2026-05-18', end:'2026-05-18', allDay:false, from:'14:00', to:'18:00', status:'approved', note:''},
+      {id:'a5', person:'nena', type:'indisponibilidade', start:'2026-04-20', end:'2026-04-20', allDay:false, from:'08:00', to:'12:00', status:'approved', note:''},
+      {id:'a6', person:'dora', type:'folga', start:'2026-04-24', end:'2026-04-24', allDay:true, from:'', to:'', status:'approved', note:''},
+      {id:'a7', person:'dora', type:'ferias', start:'2026-03-10', end:'2026-03-14', allDay:true, from:'', to:'', status:'approved', note:''},
+      {id:'a8', person:'pedro', type:'baixa', start:'2026-02-03', end:'2026-02-05', allDay:true, from:'', to:'', status:'approved', note:''},
+      {id:'a9', person:'sofia', type:'consulta', start:'2026-04-02', end:'2026-04-02', allDay:false, from:'09:00', to:'11:00', status:'approved', note:''},
+      {id:'a10', person:'tiago', type:'folga', start:'2026-03-27', end:'2026-03-27', allDay:true, from:'', to:'', status:'rejected', note:''},
+      {id:'a11', person:'andreia', type:'formacao', start:'2026-01-22', end:'2026-01-22', allDay:false, from:'09:00', to:'13:00', status:'approved', note:''}
+    ]
+  };
+}
+
+var D = seed();
+var UI = {mode:'micro', tab:'colab', fc:{q:'', role:'', team:'', access:''}, fa:{q:'', team:'', type:'', status:''}, histAll:false};
+
+/* ---- consultas ---- */
+function person(id){ return D.people.find(function(p){ return p.id === id; }); }
+function team(id){ return D.teams.find(function(t){ return t.id === id; }); }
+function clientName(id){ var c = CLIENTS.find(function(c){ return c.id === id; }); return c ? c.name : id; }
+function alojById(id){ return D.aloj.find(function(a){ return a.id === id; }); }
+function members(tid){ return D.people.filter(function(p){ return p.team === tid && !p.archived; }); }
+function initials(n){ var w = n.trim().split(/\s+/); return ((w[0] || '')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); }
+function firstName(n){ return n.trim().split(/\s+/)[0]; }
+function fem(n){ return /a$/i.test(firstName(n)); }
+function roleLabel(p){
+  var f = fem(p.name);
+  if (p.role === 'admin') return UI.mode === 'micro' ? (f ? 'Administradora / Gestora' : 'Administrador / Gestor') : (f ? 'Administradora' : 'Administrador');
+  if (p.role === 'manager') return f ? 'Gestora' : 'Gestor';
+  return f ? 'Colaboradora' : 'Colaborador';
+}
+function teamLabel(p){
+  var t = p.team && team(p.team);
+  if (t) return t.name;
+  return p.role === 'admin' || p.role === 'manager' ? 'Todas as equipas' : 'Sem equipa';
+}
+function usesPin(p){ return p.role === 'collab'; }
+function absDuration(a){
+  var n = dayCount(a.start, a.end);
+  if (a.allDay) return n + (n === 1 ? ' dia' : ' dias');
+  var h = (mins(a.to) - mins(a.from)) / 60;
+  return n > 1 ? fmtH(h * n) + ' · ' + n + ' dias' : fmtH(h);
+}
+function absHours(a){ return a.allDay ? 'Dia inteiro' : a.from + ' – ' + a.to; }
+function isUpcoming(a){ return a.end >= TODAY; }
+function pill(cls, label, title){ return '<span class="pill ' + cls + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(label) + '</span>'; }
+function accessPill(p){
+  if (p.archived) return pill('dark', 'Arquivado');
+  var a = ACCESS[p.access]; return pill(a.cls, a.label, a.desc);
+}
+function absPill(a){ var s = ABS_STATUS[a.status]; return pill(s[0], s[1]); }
+function avatar(p, cls){ return '<span class="av ' + (cls || '') + '" aria-hidden="true">' + esc(initials(p.name)) + '</span>'; }
+function opts(list, val){ return list.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join(''); }
+function hasManager(){ return D.people.some(function(p){ return p.role === 'manager' && !p.archived; }); }
+
+function jobsFor(p){
+  var t = p.team && team(p.team);
+  if (!t || p.archived || p.role !== 'collab') return [];
+  var places = t.clients.map(clientName).concat(t.aloj.map(function(id){ var a = alojById(id); return a ? a.name : ''; })).filter(Boolean);
+  if (!places.length) return [];
+  var slots = [[1,'08:00 – 12:00'],[3,'09:00 – 13:00'],[4,'14:00 – 17:00'],[5,'08:00 – 12:00']];
+  return slots.map(function(s, i){ return {date:addDays(TODAY, s[0]), time:s[1], place:places[i % places.length], team:t.name}; })
+    .filter(function(j){
+      return !D.absences.some(function(a){ return a.person === p.id && a.status !== 'rejected' && a.allDay && j.date >= a.start && j.date <= a.end; });
+    }).slice(0, 3);
+}
+
+/* =========================================================
+   Camadas: menus, painéis, modais, toasts
+   ========================================================= */
+var device = $('#device'), viewport = $('#viewport'), layer = $('#layer');
+var stack = [];
+var menuState = null;
+
+function toast(msg){
+  var old = $('.toast', layer); if (old) old.remove();
+  var t = document.createElement('div');
+  t.className = 'toast'; t.setAttribute('role', 'status');
+  t.innerHTML = ic('check') + '<span>' + esc(msg) + '</span>';
+  layer.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3200);
+}
+
+function closeMenu(){
+  if (!menuState) return;
+  menuState.el.remove();
+  menuState.anchor.setAttribute('aria-expanded', 'false');
+  menuState = null;
+}
+function openMenu(anchor, items){
+  var same = menuState && menuState.anchor === anchor;
+  closeMenu();
+  if (same) return;
+  var m = document.createElement('div');
+  m.className = 'menu'; m.setAttribute('role', 'menu');
+  m.innerHTML = items.map(function(it, i){
+    if (it === '-') return '<div class="menu-sep" role="separator"></div>';
+    return '<button type="button" role="menuitem" class="menu-item' + (it.danger ? ' danger' : '') + '" data-i="' + i + '">' + ic(it.icon) + esc(it.label) + '</button>';
+  }).join('');
+  layer.appendChild(m);
+  var dr = device.getBoundingClientRect(), ar = anchor.getBoundingClientRect();
+  var left = Math.max(8, Math.min(ar.right - dr.left - m.offsetWidth, dr.width - m.offsetWidth - 8));
+  var top = ar.bottom - dr.top + 6;
+  if (top + m.offsetHeight > dr.height - 8) top = ar.top - dr.top - m.offsetHeight - 6;
+  top = Math.max(8, Math.min(top, dr.height - m.offsetHeight - 8));
+  m.style.left = left + 'px'; m.style.top = top + 'px';
+  m.addEventListener('click', function(e){
+    var b = e.target.closest('[data-i]'); if (!b) return;
+    var it = items[+b.dataset.i]; var anc = anchor;
+    closeMenu(); anc.focus({preventScroll:true}); it.run();
+  });
+  m.addEventListener('keydown', function(e){
+    var btns = $$('.menu-item', m), i = btns.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown'){ e.preventDefault(); btns[(i + 1) % btns.length].focus(); }
+    if (e.key === 'ArrowUp'){ e.preventDefault(); btns[(i - 1 + btns.length) % btns.length].focus(); }
+  });
+  menuState = {el:m, anchor:anchor};
+  anchor.setAttribute('aria-expanded', 'true');
+  var f = m.querySelector('button'); if (f) f.focus({preventScroll:true});
+}
+
+function openDrawer(label){
+  closeMenu();
+  var bd = document.createElement('div'); bd.className = 'backdrop';
+  var el = document.createElement('aside');
+  el.className = 'drawer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', label);
+  layer.appendChild(bd); layer.appendChild(el);
+  var o = {el:el, bd:bd, ret:document.activeElement, redraw:null};
+  bd.addEventListener('click', function(){ closeOverlay(o); });
+  stack.push(o);
+  return o;
+}
+function openModal(o2){
+  var bd = document.createElement('div'); bd.className = 'backdrop';
+  var el = document.createElement('div');
+  el.className = 'modal'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'mdlT');
+  el.innerHTML = '<h2 id="mdlT">' + esc(o2.title) + '</h2><p>' + o2.body + '</p><div class="acts">' +
+    '<button type="button" class="btn btn-outline" data-m="no">Cancelar</button>' +
+    '<button type="button" class="btn ' + (o2.danger ? 'btn-danger-solid' : 'btn-primary') + '" data-m="yes">' + esc(o2.confirm) + '</button></div>';
+  layer.appendChild(bd); layer.appendChild(el);
+  var o = {el:el, bd:bd, ret:document.activeElement};
+  stack.push(o);
+  bd.addEventListener('click', function(){ closeOverlay(o); });
+  el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-m]'); if (!b) return;
+    closeOverlay(o);
+    if (b.dataset.m === 'yes') o2.run();
+  });
+  $('[data-m="yes"]', el).focus();
+}
+function closeOverlay(o){
+  var i = stack.indexOf(o); if (i < 0) return;
+  stack.splice(i, 1);
+  o.el.remove(); o.bd.remove();
+  if (o.ret && o.ret.isConnected) o.ret.focus({preventScroll:true});
+}
+function closeAll(){ closeMenu(); while (stack.length) closeOverlay(stack[stack.length - 1]); }
+function focusIn(el){
+  requestAnimationFrame(function(){
+    var f = el.querySelector('[data-autofocus]') || el.querySelector('input:not([type=hidden]),select,textarea') || el.querySelector('button');
+    if (f) f.focus({preventScroll:true});
+  });
+}
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){
+    if (menuState){ var a = menuState.anchor; closeMenu(); a.focus(); return; }
+    if (stack.length) closeOverlay(stack[stack.length - 1]);
+  }
+  if (e.key === 'Tab' && stack.length){
+    var top = stack[stack.length - 1].el;
+    var f = $$('button:not([disabled]),input:not([type=hidden]),select,textarea,[href],[tabindex="0"]', top).filter(function(x){ return x.offsetParent !== null; });
+    if (!f.length) return;
+    if (e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[f.length - 1]){ e.preventDefault(); f[0].focus(); }
+    else if (!top.contains(document.activeElement)){ e.preventDefault(); f[0].focus(); }
+  }
+});
+document.addEventListener('mousedown', function(e){
+  if (menuState && !menuState.el.contains(e.target) && !menuState.anchor.contains(e.target)) closeMenu();
+});
+viewport.addEventListener('scroll', closeMenu, {passive:true});
+window.addEventListener('resize', closeMenu);
+
+/* =========================================================
+   Página
+   ========================================================= */
+function refresh(){
+  renderHeadActions(); renderStats(); renderTabs(); renderLists();
+  stack.forEach(function(o){ if (o.redraw) o.redraw(); });
+}
+function renderAll(){ renderHeadActions(); renderStats(); renderTabs(); renderPanel(); }
+
+function renderHeadActions(){
+  var el = $('#headActions');
+  if (UI.tab === 'colab') el.innerHTML = '<button type="button" class="btn btn-primary" data-act="add-person">' + ic('plus') + 'Adicionar colaborador</button>';
+  else if (UI.tab === 'teams') el.innerHTML = '<button type="button" class="btn btn-primary" data-act="create-team">' + ic('plus') + 'Criar equipa</button>';
+  else el.innerHTML = '<button type="button" class="btn btn-primary" data-act="add-absence">' + ic('plus') + 'Registar ausência</button>' +
+    '<button type="button" class="btn btn-outline" data-act="history" aria-pressed="' + UI.histAll + '">' + ic('history') + 'Histórico</button>';
+}
+
+function renderStats(){
+  var act = D.people.filter(function(p){ return !p.archived; });
+  var on = act.filter(function(p){ return p.access === 'active'; }).length;
+  var waiting = act.filter(function(p){ return p.access === 'sent' || p.access === 'none' || p.access === 'failed'; }).length;
+  var noTeam = act.filter(function(p){ return p.role === 'collab' && !p.team; }).length;
+  var up = D.absences.filter(function(a){ return isUpcoming(a) && a.status !== 'rejected'; });
+  var pend = up.filter(function(a){ return a.status === 'pending'; }).length;
+  function card(tab, icon, v, l, s){
+    return '<button type="button" class="stat" data-act="tab" data-tab="' + tab + '"><span class="stat-ic">' + ic(icon) + '</span>' +
+      '<span class="stat-v">' + v + '</span><span class="stat-txt"><span class="stat-l">' + l + '</span><span class="stat-s">' + s + '</span></span></button>';
+  }
+  $('#stats').innerHTML =
+    card('colab', 'user', act.length, 'Colaboradores ativos', on + ' com acesso ativo · ' + waiting + ' por ativar') +
+    card('teams', 'users', D.teams.length, 'Equipas ativas', noTeam ? noTeam + (noTeam === 1 ? ' pessoa sem equipa' : ' pessoas sem equipa') : 'Todos com equipa atribuída') +
+    card('abs', 'cal', up.length, 'Ausências próximas', pend + (pend === 1 ? ' por aprovar' : ' por aprovar'));
+}
+
+var TABS = [['colab','Colaboradores'],['teams','Equipas'],['abs','Ausências']];
+function renderTabs(){
+  var counts = {
+    colab: D.people.filter(function(p){ return !p.archived; }).length,
+    teams: D.teams.length,
+    abs: D.absences.filter(function(a){ return isUpcoming(a) && a.status !== 'rejected'; }).length
+  };
+  $('#tabs').innerHTML = TABS.map(function(t){
+    var on = UI.tab === t[0];
+    return '<button type="button" role="tab" class="tab" id="tab-' + t[0] + '" aria-controls="panel" aria-selected="' + on + '" tabindex="' + (on ? 0 : -1) + '" data-act="tab" data-tab="' + t[0] + '">' +
+      t[1] + '<span class="count">' + counts[t[0]] + '</span></button>';
+  }).join('');
+  $('#panel').setAttribute('aria-labelledby', 'tab-' + UI.tab);
+}
+$('#tabs').addEventListener('keydown', function(e){
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  var i = TABS.findIndex(function(t){ return t[0] === UI.tab; });
+  i = (i + (e.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length;
+  setTab(TABS[i][0]); $('#tab-' + UI.tab).focus();
+});
+function setTab(t){ UI.tab = t; closeMenu(); renderAll(); }
+
+function renderPanel(){
+  var p = $('#panel');
+  if (UI.tab === 'colab') p.innerHTML = panelColab();
+  else if (UI.tab === 'teams') p.innerHTML = '<div class="teams" id="teamGrid"></div>';
+  else p.innerHTML = panelAbs();
+  renderLists();
+}
+function renderLists(){
+  if (UI.tab === 'colab'){ renderManagerBanner(); renderColabRows(); }
+  else if (UI.tab === 'teams') renderTeams();
+  else renderAbsRows();
+}
+
+/* ---------------- Colaboradores ---------------- */
+function roleOptions(){
+  var o = [['','Todas as funções'], ['admin', UI.mode === 'micro' ? 'Administração e gestão' : 'Administração']];
+  if (UI.mode === 'separate' || hasManager()) o.push(['manager','Gestão']);
+  o.push(['collab','Colaboradores']);
+  return o;
+}
+function teamOptions(){ return [['','Todas as equipas']].concat(D.teams.map(function(t){ return [t.id, t.name]; })).concat([['none','Sem equipa']]); }
+function accessOptions(){
+  return [['','Todos os acessos']].concat(Object.keys(ACCESS).map(function(k){ return [k, ACCESS[k].label]; })).concat([['archived','Arquivados']]);
+}
+function panelColab(){
+  var f = UI.fc;
+  var legend = Object.keys(ACCESS).map(function(k){ return pill(ACCESS[k].cls, ACCESS[k].label, ACCESS[k].desc); }).join('');
+  return '<div id="mgrBanner"></div>' +
+    '<div class="toolbar">' +
+      '<label class="search">' + ic('search') + '<span class="sr">Pesquisar colaboradores</span><input type="search" data-fc="q" value="' + esc(f.q) + '" placeholder="Pesquisar por nome ou email…"></label>' +
+      '<div class="filters">' +
+        '<select data-fc="role" aria-label="Filtrar por função">' + opts(roleOptions(), f.role) + '</select>' +
+        '<select data-fc="team" aria-label="Filtrar por equipa">' + opts(teamOptions(), f.team) + '</select>' +
+        '<select data-fc="access" aria-label="Filtrar por estado de acesso">' + opts(accessOptions(), f.access) + '</select>' +
+      '</div>' +
+    '</div>' +
+    '<div class="tablewrap"><table class="tbl">' +
+      '<thead><tr><th>Nome</th><th>Função</th><th>Equipa</th><th>Acesso</th><th class="th-act"><span class="sr">Ações</span>' + '</th></tr></thead>' +
+      '<tbody id="colabRows"></tbody></table></div>' +
+    '<div class="foot"><span id="colabFoot"></span><span class="legend"><span>Estados:</span>' + legend + '</span></div>';
+}
+function renderManagerBanner(){
+  var el = $('#mgrBanner'); if (!el) return;
+  if (UI.mode !== 'separate'){ el.innerHTML = ''; return; }
+  var mgr = D.people.find(function(p){ return p.role === 'manager' && !p.archived; });
+  if (!mgr){
+    el.innerHTML = '<div class="callout warn">' + ic('shield') + '<div class="callout-txt"><b>Responsabilidades separadas</b>' +
+      '<p>A administração e a gestão diária são feitas por pessoas diferentes. Ainda não existe uma gestora atribuída.</p></div>' +
+      '<button type="button" class="btn btn-soft btn-sm" data-act="invite-manager">' + ic('plus') + 'Convidar gestora</button></div>';
+  } else {
+    el.innerHTML = '<div class="callout">' + ic('shield') + '<div class="callout-txt"><b>Responsabilidades separadas</b>' +
+      '<p>' + esc(mgr.name) + ' é ' + esc(roleLabel(mgr).toLowerCase()) + ' da empresa.</p></div>' + accessPill(mgr) +
+      '<button type="button" class="btn btn-outline btn-sm" data-act="open-person" data-id="' + mgr.id + '">Ver ficha</button></div>';
+  }
+}
+function filteredPeople(){
+  var f = UI.fc, q = norm(f.q), order = {admin:0, manager:1, collab:2};
+  return D.people.filter(function(p){
+    if (f.access === 'archived'){ if (!p.archived) return false; }
+    else { if (p.archived) return false; if (f.access && p.access !== f.access) return false; }
+    if (f.role && p.role !== f.role) return false;
+    if (f.team === 'none' && p.team) return false;
+    if (f.team && f.team !== 'none' && p.team !== f.team) return false;
+    if (q && norm(p.name + ' ' + p.email).indexOf(q) === -1) return false;
+    return true;
+  }).sort(function(a, b){ return order[a.role] - order[b.role] || a.name.localeCompare(b.name, 'pt'); });
+}
+function renderColabRows(){
+  var tb = $('#colabRows'); if (!tb) return;
+  var list = filteredPeople();
+  var total = D.people.filter(function(p){ return !p.archived; }).length;
+  tb.innerHTML = list.length ? list.map(function(p){
+    var lead = D.teams.some(function(t){ return t.lead === p.id; });
+    return '<tr data-person="' + p.id + '" tabindex="0" aria-label="Abrir ' + esc(p.name) + '">' +
+      '<td><div class="who">' + avatar(p) + '<span><b>' + esc(p.name) + '</b>' + (lead ? '<small>Responsável de equipa</small>' : '') + '</span></div></td>' +
+      '<td class="w muted">' + esc(roleLabel(p)) + '</td>' +
+      '<td class="w muted">' + esc(teamLabel(p)) + '</td>' +
+      '<td class="n c-sub">' + esc(roleLabel(p)) + ' · ' + esc(teamLabel(p)) + '</td>' +
+      '<td class="c-pill">' + accessPill(p) + (p._busy ? ' <span class="spin" style="display:inline-block;vertical-align:-2px;color:var(--mute)"></span>' : '') + '</td>' +
+      '<td class="c-act"><button type="button" class="icon-btn" data-act="menu-person" data-id="' + p.id + '" aria-label="Mais opções para ' + esc(p.name) + '" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></td>' +
+    '</tr>';
+  }).join('') : '<tr class="row-empty"><td colspan="5"><div class="empty"><b>Nenhum colaborador encontrado</b>Ajusta a pesquisa ou os filtros. <button type="button" class="link" data-act="clear-fc">Limpar filtros</button></div></td></tr>';
+  var ft = $('#colabFoot');
+  ft.textContent = list.length === total && UI.fc.access !== 'archived' ? total + ' colaboradores' : list.length + ' de ' + total + ' colaboradores';
+}
+
+function personMenu(anchor, p){
+  var items = [{label:'Ver detalhe', icon:'eye', run:function(){ openPerson(p.id); }}];
+  if (!p.archived){
+    if (p.access === 'none') items.push({label:'Enviar acesso', icon:'send', run:function(){ sendAccess(p); }});
+    else if (p.access !== 'suspended') items.push({label:'Reenviar acesso', icon:'send', run:function(){ sendAccess(p); }});
+    if (p.role !== 'admin'){
+      if (p.access === 'suspended') items.push({label:'Reativar acesso', icon:'play', run:function(){ reactivate(p); }});
+      else if (p.access === 'active' || p.access === 'sent') items.push({label:'Suspender acesso', icon:'pause', run:function(){ suspend(p); }});
+      items.push({label:'Registar ausência', icon:'cal', run:function(){ openAbsence({person:p.id}); }});
+      items.push('-');
+      if (p.jobs > 0) items.push({label:'Arquivar colaborador', icon:'archive', danger:true, run:function(){ archive(p); }});
+      else items.push({label:'Eliminar colaborador', icon:'trash', danger:true, run:function(){ removePerson(p); }});
+    }
+  } else items.push({label:'Restaurar colaborador', icon:'restore', run:function(){ restore(p); }});
+  openMenu(anchor, items);
+}
+
+/* ---- ações de acesso (simuladas) ---- */
+function sendAccess(p){
+  if (p._busy) return;
+  p._busy = true; refresh();
+  setTimeout(function(){
+    p._busy = false;
+    if (/falha/i.test(p.email)){ p.access = 'failed'; refresh(); toast('Não foi possível enviar o email para ' + p.email + '.'); return; }
+    p.access = 'sent';
+    var n = new Date(); p.sentAt = pad(n.getHours()) + ':' + pad(n.getMinutes());
+    refresh();
+    toast('Acesso enviado para ' + p.email + ' (simulação).');
+  }, 1000);
+}
+function suspend(p){
+  openModal({title:'Suspender acesso?', body:esc(p.name) + ' deixa de conseguir entrar na aplicação. Os dados e as atribuições mantêm-se.', confirm:'Suspender acesso', danger:true,
+    run:function(){ p.access = 'suspended'; refresh(); toast('Acesso de ' + p.name + ' suspenso.'); }});
+}
+function reactivate(p){ p.access = 'active'; refresh(); toast('Acesso de ' + p.name + ' reativado.'); }
+function clearLead(pid){ D.teams.forEach(function(t){ if (t.lead === pid) t.lead = null; }); }
+function archive(p){
+  openModal({title:'Arquivar colaborador?', body:esc(p.name) + ' tem histórico operacional (' + p.jobs + ' limpezas). O acesso é suspenso e a pessoa sai das listas ativas, mas os registos anteriores ficam preservados.', confirm:'Arquivar', danger:true,
+    run:function(){ p.archived = true; p.access = 'suspended'; clearLead(p.id); refresh(); toast(p.name + ' arquivado. Registos preservados.'); }});
+}
+function removePerson(p){
+  openModal({title:'Eliminar colaborador?', body:esc(p.name) + ' não tem histórico operacional, por isso pode ser eliminado definitivamente. Esta ação não pode ser anulada.', confirm:'Eliminar', danger:true,
+    run:function(){
+      D.people = D.people.filter(function(x){ return x !== p; });
+      D.absences = D.absences.filter(function(a){ return a.person !== p.id; });
+      clearLead(p.id); refresh(); toast(p.name + ' eliminado.');
+    }});
+}
+function restore(p){ p.archived = false; refresh(); toast(p.name + ' restaurado. O acesso continua suspenso.'); }
+
+/* ---- detalhe do colaborador ---- */
+function openPerson(id, tab){
+  var st = {id:id, tab:tab || 'overview', editing:false};
+  var o = openDrawer('Detalhe do colaborador');
+  function draw(){
+    var p = person(st.id);
+    if (!p){ closeOverlay(o); return; }
+    if (st.editing) return;
+    o.el.innerHTML = personHTML(p, st);
+  }
+  o.redraw = draw; draw();
+  requestAnimationFrame(function(){ var c = $('.dr-close', o.el); if (c) c.focus({preventScroll:true}); });
+
+  o.el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    var p = person(st.id); if (!p) return;
+    switch (b.dataset.d){
+      case 'close': closeOverlay(o); break;
+      case 'tab': st.tab = b.dataset.tab; st.editing = false; draw(); break;
+      case 'edit': st.tab = 'data'; st.editing = false; draw(); st.editing = true; drawEdit(p); break;
+      case 'cancel-edit': st.editing = false; draw(); break;
+      case 'send': sendAccess(p); break;
+      case 'suspend': suspend(p); break;
+      case 'reactivate': reactivate(p); break;
+      case 'archive': archive(p); break;
+      case 'delete': removePerson(p); break;
+      case 'restore': restore(p); break;
+      case 'sim-activate': p.access = 'active'; refresh(); toast(p.name + ' ativou a conta (simulação).'); break;
+      case 'sim-fail': p.access = 'failed'; refresh(); toast('Falha no envio simulada.'); break;
+      case 'absence': closeOverlay(o); openAbsence({person:p.id}); break;
+      case 'jobs': toast('A agenda completa fica disponível no módulo Planeamento.'); break;
+    }
+  });
+
+  function drawEdit(p){
+    var body = $('#pdBody', o.el);
+    var roleSel = p.role === 'admin'
+      ? '<input value="' + esc(roleLabel(p)) + '" disabled>'
+      : '<select name="role">' + opts([['collab', fem(p.name) ? 'Colaboradora' : 'Colaborador']].concat(UI.mode === 'separate' || p.role === 'manager' ? [['manager', fem(p.name) ? 'Gestora' : 'Gestor']] : []), p.role) + '</select>';
+    body.innerHTML = '<form class="form" id="pdForm" novalidate>' +
+      fld('pd-name', 'Nome completo', '<input id="pd-name" name="name" value="' + esc(p.name) + '" autocomplete="off">') +
+      fld('pd-email', 'Email', '<input id="pd-email" name="email" type="email" value="' + esc(p.email) + '">') +
+      '<div class="grid2">' +
+        fld('pd-phone', 'Telefone', '<input id="pd-phone" name="phone" inputmode="tel" value="' + esc(p.phone || '') + '">') +
+        fld('pd-rate', 'Valor/hora <span class="opt">(opcional)</span>', '<div class="suffix"><input id="pd-rate" name="rate" inputmode="decimal" value="' + (p.rate == null ? '' : String(p.rate).replace('.', ',')) + '"><span>€/h</span></div>') +
+      '</div>' +
+      '<div class="grid2">' +
+        '<div class="fld"><label>Função</label>' + roleSel + '</div>' +
+        '<div class="fld"><label for="pd-team">Equipa</label><select id="pd-team" name="team">' + opts([['', p.role === 'collab' ? 'Sem equipa' : 'Todas as equipas']].concat(D.teams.map(function(t){ return [t.id, t.name]; })), p.team || '') + '</select></div>' +
+      '</div>' +
+      '<div class="acts-row" style="justify-content:flex-end"><button type="button" class="btn btn-outline" data-d="cancel-edit">Cancelar</button><button type="submit" class="btn btn-primary">Guardar alterações</button></div>' +
+    '</form>';
+    $('#pd-name', o.el).focus();
+    $('#pdForm', o.el).addEventListener('submit', function(e){
+      e.preventDefault();
+      var fm = e.target, v = {name:fm.elements.name.value.trim(), email:fm.email.value.trim(), phone:fm.phone.value.trim(), rate:fm.rate.value.trim()};
+      var errs = validatePerson(v, p.id);
+      showErrs(fm, errs);
+      if (Object.keys(errs).length) return;
+      var newTeam = fm.team.value || null;
+      if (newTeam !== p.team) clearLead(p.id);
+      p.name = v.name; p.email = v.email; p.phone = v.phone; p.rate = v.rate ? parseFloat(v.rate.replace(',', '.')) : null; p.team = newTeam;
+      if (fm.role) p.role = fm.role.value;
+      st.editing = false; refresh(); toast('Dados de ' + p.name + ' atualizados.');
+    });
+  }
+}
+
+function personHTML(p, st){
+  var isAdmin = p.role === 'admin';
+  var a = ACCESS[p.access];
+  var acts = ['<button type="button" class="btn btn-outline btn-sm" data-d="edit">' + ic('edit') + 'Editar</button>'];
+  if (!p.archived){
+    if (p._busy) acts.push('<button type="button" class="btn btn-soft btn-sm" disabled><span class="spin"></span>A enviar…</button>');
+    else if (p.access === 'none') acts.push('<button type="button" class="btn btn-soft btn-sm" data-d="send">' + ic('send') + 'Enviar acesso</button>');
+    else if (p.access !== 'suspended') acts.push('<button type="button" class="btn btn-outline btn-sm" data-d="send">' + ic('send') + 'Reenviar acesso</button>');
+    if (!isAdmin){
+      if (p.access === 'suspended') acts.push('<button type="button" class="btn btn-outline btn-sm" data-d="reactivate">' + ic('play') + 'Reativar acesso</button>');
+      else if (p.access === 'active' || p.access === 'sent') acts.push('<button type="button" class="btn btn-outline btn-sm" data-d="suspend">' + ic('pause') + 'Suspender acesso</button>');
+      acts.push(p.jobs > 0
+        ? '<button type="button" class="btn btn-danger btn-sm" data-d="archive">' + ic('archive') + 'Arquivar colaborador</button>'
+        : '<button type="button" class="btn btn-danger btn-sm" data-d="delete">' + ic('trash') + 'Eliminar colaborador</button>');
+    }
+  } else acts.push('<button type="button" class="btn btn-soft btn-sm" data-d="restore">' + ic('restore') + 'Restaurar colaborador</button>');
+
+  var accDesc = p.archived ? 'Colaborador arquivado. Os registos anteriores estão preservados.' : a.desc;
+  if (!p.archived && p.access === 'sent') accDesc = 'Email enviado para ' + p.email + (p.sentAt ? ' às ' + p.sentAt : '') + '. Aguarda ativação.';
+  var method = usesPin(p) ? 'Entrada com PIN de 4 dígitos.' : 'Entrada com credenciais completas (email e palavra-passe).';
+
+  var body;
+  if (st.tab === 'overview'){
+    var jobs = jobsFor(p);
+    var abs = D.absences.filter(function(x){ return x.person === p.id && isUpcoming(x); }).sort(function(x, y){ return x.start < y.start ? -1 : 1; });
+    body =
+      '<div class="box"><div class="box-h">' + ic('cal') + '<h3>Próximos trabalhos</h3>' + (jobs.length ? '<button type="button" class="link" data-d="jobs">Ver todos</button>' : '') + '</div>' +
+        (jobs.length ? jobs.map(function(j){
+          return '<div class="kv"><div><span>' + esc(relDay(j.date)) + '</span><span class="s">' + esc(j.time) + '</span></div><div><span>' + esc(j.place) + '</span><span class="s">' + esc(j.team) + '</span></div></div>';
+        }).join('') : '<p class="muted-empty">' + (isAdmin ? 'Sem limpezas atribuídas diretamente.' : 'Sem trabalhos agendados.') + '</p>') +
+      '</div>' +
+      '<div class="box"><div class="box-h">' + ic('clock') + '<h3>Próximas ausências</h3>' + (!isAdmin && !p.archived ? '<button type="button" class="link" data-d="absence">Registar</button>' : '') + '</div>' +
+        (abs.length ? abs.map(function(x){
+          return '<div class="kv"><div><span>' + esc(fmtRange(x.start, x.end)) + '</span><span class="s">' + esc(absHours(x)) + ' · ' + esc(absDuration(x)) + '</span></div><div class="end"><span>' + esc(ABS_TYPES[x.type]) + '</span><span class="s">' + absPill(x) + '</span></div></div>';
+        }).join('') : '<p class="muted-empty">Sem ausências registadas.</p>') +
+      '</div>' +
+      '<div class="box"><div class="box-h">' + ic('user') + '<h3>Condições</h3></div>' +
+        '<div class="kv"><span style="color:var(--mute)">Valor/hora</span><span class="end num">' + euro(p.rate) + '</span></div>' +
+        '<div class="kv"><span style="color:var(--mute)">Histórico operacional</span><span class="end num">' + (p.jobs ? p.jobs + ' limpezas concluídas' : 'Sem registos') + '</span></div>' +
+        '<div class="kv"><span style="color:var(--mute)">Na empresa desde</span><span class="end">' + fmtDay(p.since, true) + '</span></div>' +
+      '</div>' +
+      '<div class="rule">' + ic(isAdmin ? 'shield' : p.jobs ? 'archive' : 'trash') + '<span>' +
+        (isAdmin ? 'Conta ' + (fem(p.name) ? 'da administradora' : 'do administrador') + ' da empresa. Não pode ser arquivada nem eliminada.'
+          : p.jobs ? 'Tem histórico operacional, por isso só pode ser <b>arquivado</b>: os registos anteriores ficam preservados.'
+          : 'Sem histórico operacional: pode ser <b>eliminado</b> definitivamente.') + '</span></div>';
+  } else {
+    body = '<dl class="dl" style="margin-top:8px">' +
+      dlRow('Nome completo', esc(p.name)) + dlRow('Email', esc(p.email)) + dlRow('Telefone', esc(p.phone || '—')) +
+      dlRow('Função', esc(roleLabel(p))) + dlRow('Equipa', esc(teamLabel(p))) + dlRow('Valor/hora', euro(p.rate)) +
+      dlRow('Na empresa desde', fmtDay(p.since, true)) + dlRow('Entrada na aplicação', method) +
+    '</dl>';
+  }
+
+  var sim = '';
+  if (!p.archived && (p.access === 'sent' || p.access === 'failed')){
+    sim = '<div class="sim"><b>Simulação</b> — sem envio real de emails nesta fase.<div class="row">' +
+      (p.access === 'sent' ? '<button type="button" class="link" data-d="sim-activate">Simular ativação da conta</button><button type="button" class="link" data-d="sim-fail">Simular falha no envio</button>' : '<span>Usa “Reenviar acesso” para voltar a tentar.</span>') +
+    '</div></div>';
+  }
+
+  return '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+    '<div class="dr-scroll">' +
+      '<div class="p-head">' + avatar(p, 'av-lg') + '<div><h2>' + esc(p.name) + '</h2><p>' + esc(roleLabel(p)) + '</p><p class="m">' + esc(teamLabel(p)) + '</p></div></div>' +
+      '<div class="acc">' + accessPill(p) + '<p>' + esc(accDesc) + ' ' + esc(method) + '</p></div>' +
+      '<div class="acts-row">' + acts.join('') + '</div>' +
+      '<div class="subtabs" role="tablist">' +
+        '<button type="button" role="tab" data-d="tab" data-tab="overview" aria-selected="' + (st.tab === 'overview') + '">Visão geral</button>' +
+        '<button type="button" role="tab" data-d="tab" data-tab="data" aria-selected="' + (st.tab === 'data') + '">Dados pessoais</button>' +
+      '</div>' +
+      '<div id="pdBody">' + body + '</div>' + sim +
+    '</div>';
+}
+function dlRow(k, v){ return '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+function fld(id, label, control, help){
+  return '<div class="fld"><label for="' + id + '">' + label + '</label>' + control + (help ? '<p class="help" id="' + id + '-help">' + help + '</p>' : '') + '<p class="err" data-err="' + id.replace(/^[a-z]+-/, '') + '" role="alert"></p></div>';
+}
+function showErrs(form, errs){
+  $$('[data-err]', form).forEach(function(el){
+    var k = el.dataset.err; el.textContent = errs[k] || '';
+    var input = form.elements[k]; if (input && input.setAttribute){ if (errs[k]) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid'); }
+  });
+  var first = Object.keys(errs)[0];
+  if (first && form.elements[first] && form.elements[first].focus) form.elements[first].focus();
+}
+function validatePerson(v, selfId){
+  var e = {};
+  if (!v.name) e.name = 'Indica o nome completo.';
+  else if (v.name.split(/\s+/).length < 2) e.name = 'Indica nome e apelido.';
+  if (!v.email) e.email = 'Indica o email — é usado para enviar o acesso.';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email)) e.email = 'Email inválido. Ex.: nome@email.pt';
+  else if (D.people.some(function(p){ return p.id !== selfId && p.email.toLowerCase() === v.email.toLowerCase(); })) e.email = 'Já existe alguém com este email.';
+  if (v.rate && !/^\d{1,3}([.,]\d{1,2})?$/.test(v.rate)) e.rate = 'Valor inválido. Ex.: 8,50';
+  return e;
+}
+
+/* ---- adicionar colaborador ---- */
+function openAddPerson(presetRole){
+  var o = openDrawer('Adicionar colaborador');
+  var st = {step:1, id:null, v:{name:'', email:'', role:presetRole || 'collab', team:'', rate:''}};
+  function roleHelp(r){ return r === 'manager' ? 'Gere planeamento, equipas e ausências. Entra com credenciais completas.' : 'Executa as limpezas. Entra na aplicação com um PIN de 4 dígitos.'; }
+  function stepper(){
+    return '<div class="steps" aria-hidden="true"><span class="' + (st.step === 1 ? 'on' : 'done') + '"><b>' + (st.step === 1 ? '1' : '✓') + '</b>Dados</span><i></i><span class="' + (st.step === 2 ? 'on' : '') + '"><b>2</b>Acesso</span></div>';
+  }
+  function draw(){
+    if (st.step === 1){
+      var roles = [['collab','Colaborador(a) operacional']];
+      if (UI.mode === 'separate') roles.push(['manager','Gestor(a)']);
+      o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+        '<form id="apForm" novalidate style="display:contents">' +
+        '<div class="dr-scroll"><div class="dr-title"><p class="eyebrow">' + (presetRole === 'manager' ? 'Responsabilidades separadas' : 'Novo elemento') + '</p><h2>' + (presetRole === 'manager' ? 'Convidar gestora' : 'Adicionar colaborador') + '</h2>' +
+          '<p>Os dados ficam disponíveis no Planeamento. O acesso à aplicação é enviado no passo seguinte.</p></div>' + stepper() +
+          '<div class="form">' +
+            fld('ap-name', 'Nome completo', '<input id="ap-name" name="name" autocomplete="off" value="' + esc(st.v.name) + '" placeholder="Ex.: Joana Pereira">') +
+            fld('ap-email', 'Email', '<input id="ap-email" name="email" type="email" autocomplete="off" value="' + esc(st.v.email) + '" placeholder="nome@email.pt">', 'Usado para enviar o acesso. Um email com “falha” simula um erro de envio.') +
+            fld('ap-role', 'Função', '<select id="ap-role" name="role">' + opts(roles, st.v.role) + '</select>', roleHelp(st.v.role)) +
+            '<div class="grid2">' +
+              fld('ap-team', 'Equipa <span class="opt">(opcional)</span>', '<select id="ap-team" name="team">' + opts([['','Sem equipa']].concat(D.teams.map(function(t){ return [t.id, t.name]; })), st.v.team) + '</select>') +
+              fld('ap-rate', 'Valor/hora <span class="opt">(opcional)</span>', '<div class="suffix"><input id="ap-rate" name="rate" inputmode="decimal" value="' + esc(st.v.rate) + '" placeholder="8,50"><span>€/h</span></div>') +
+            '</div>' +
+          '</div></div>' +
+        '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button><button type="submit" class="btn btn-primary">Guardar colaborador</button></div>' +
+        '</form>';
+      var fm = $('#apForm', o.el);
+      fm.role.addEventListener('change', function(){ st.v.role = fm.role.value; $('#ap-role-help', o.el).textContent = roleHelp(st.v.role); });
+      fm.addEventListener('submit', function(e){
+        e.preventDefault();
+        var v = {name:fm.elements.name.value.trim(), email:fm.email.value.trim(), role:fm.role.value, team:fm.team.value, rate:fm.rate.value.trim()};
+        st.v = v;
+        var errs = validatePerson(v);
+        showErrs(fm, errs);
+        if (Object.keys(errs).length) return;
+        var p = {id:uid('p'), name:v.name, email:v.email, role:v.role, team:v.team || null, access:'none', rate:v.rate ? parseFloat(v.rate.replace(',', '.')) : null, jobs:0, phone:'', since:TODAY, archived:false, sentAt:null};
+        D.people.push(p);
+        st.id = p.id; st.step = 2;
+        o.redraw = draw;
+        refresh();
+        requestAnimationFrame(function(){ var b = $('[data-d="send"]', o.el); if (b) b.focus({preventScroll:true}); });
+      });
+      focusIn(o.el);
+    } else {
+      var p = person(st.id);
+      if (!p){ closeOverlay(o); return; }
+      var art = fem(p.name) ? 'a' : 'o';
+      var t = p.team && team(p.team);
+      var accessBlock;
+      if (p._busy) accessBlock = '<div class="acts-row"><button type="button" class="btn btn-primary" disabled><span class="spin"></span>A enviar…</button></div>';
+      else if (p.access === 'none') accessBlock = '<div class="acts-row"><button type="button" class="btn btn-primary" data-d="send">' + ic('send') + 'Enviar acesso</button><button type="button" class="btn btn-ghost" data-d="later">Enviar mais tarde</button></div>';
+      else if (p.access === 'failed') accessBlock = '<div class="warnbox" style="margin-top:14px">' + ic('alert') + '<span>O envio para ' + esc(p.email) + ' falhou. Confirma o email na ficha e reenvia.</span></div><div class="acts-row"><button type="button" class="btn btn-outline" data-d="send">' + ic('send') + 'Reenviar acesso</button></div>';
+      else accessBlock = '<div class="okbanner" style="margin-top:14px"><span class="ic">' + ic('send') + '</span><div><b>Acesso enviado</b><span>Email enviado para ' + esc(p.email) + (p.sentAt ? ' às ' + p.sentAt : '') + '. Aguarda ativação.</span></div></div>';
+
+      o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+        '<div class="dr-scroll"><div class="dr-title"><p class="eyebrow">Novo elemento</p><h2>Acesso à aplicação</h2></div>' + stepper() +
+          '<div class="okbanner" style="margin-top:20px"><span class="ic">' + ic('check') + '</span><div><b>Colaborador guardado</b><span>' + esc(p.name) + ' foi adicionad' + art + (t ? ' à ' + esc(t.name) : ' sem equipa') + ' como ' + esc(roleLabel(p).toLowerCase()) + '.</span></div></div>' +
+          '<div class="box" style="margin-top:16px"><div class="box-h">' + ic('key') + '<h3>Acesso à aplicação</h3>' + accessPill(p) + '</div>' +
+            '<p style="margin:4px 0 0;color:var(--ink-2)">O email <b>ativa ou cria a conta</b> de ' + esc(firstName(p.name)) + ': se já existir uma conta com <b>' + esc(p.email) + '</b>, é ativada; caso contrário, é criada.</p>' +
+            (usesPin(p)
+              ? '<div class="method"><span class="pin" aria-hidden="true"><i>•</i><i>•</i><i>•</i><i>•</i></span><div><b>Ativação com PIN de 4 dígitos</b><span>Para colaboradoras operacionais: definem um PIN no telemóvel e entram sem palavra-passe.</span></div></div>'
+              : '<div class="method"><span class="keyic">' + ic('key') + '</span><div><b>Credenciais completas</b><span>Administradoras e gestoras criam palavra-passe e entram com email e palavra-passe.</span></div></div>') +
+            accessBlock +
+          '</div>' +
+          '<p class="help" style="margin-top:12px">Simulação: nenhum email é enviado nesta fase.</p>' +
+        '</div>' +
+        '<div class="dr-foot"><button type="button" class="btn btn-ghost" data-d="another">' + ic('plus') + 'Adicionar outro</button><button type="button" class="btn btn-outline" data-d="view">Ver ficha</button><button type="button" class="btn btn-primary" data-d="close">Concluir</button></div>';
+    }
+  }
+  o.el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    var p = st.id && person(st.id);
+    switch (b.dataset.d){
+      case 'close': closeOverlay(o); break;
+      case 'send': if (p) sendAccess(p); break;
+      case 'later': closeOverlay(o); toast(p.name + ' guardado sem acesso. Podes enviar mais tarde.'); break;
+      case 'another': st = {step:1, id:null, v:{name:'', email:'', role:'collab', team:'', rate:''}}; o.redraw = null; draw(); break;
+      case 'view': closeOverlay(o); openPerson(p.id); break;
+    }
+  });
+  draw();
+}
+
+/* ---------------- Equipas ---------------- */
+function renderTeams(){
+  var g = $('#teamGrid'); if (!g) return;
+  g.innerHTML = D.teams.map(function(t){
+    var ms = members(t.id), lead = t.lead && person(t.lead);
+    var shown = ms.slice(0, 4);
+    var chips = t.zones.slice(0, 2).map(function(z){ return '<span class="chip">' + ic('pin') + esc(z) + '</span>'; }).join('') +
+      t.clients.slice(0, 1).map(function(c){ return '<span class="chip">' + ic('building') + esc(clientName(c)) + '</span>'; }).join('') +
+      (t.clients.length > 1 ? '<span class="chip">+' + (t.clients.length - 1) + (t.clients.length === 2 ? ' cliente' : ' clientes') + '</span>' : '') +
+      (t.aloj.length ? '<span class="chip">' + ic('home') + t.aloj.length + (t.aloj.length === 1 ? ' alojamento' : ' alojamentos') + '</span>' : '');
+    return '<article class="team-card">' +
+      '<div class="team-top"><div><h3>' + esc(t.name) + '</h3><p>' + ms.length + (ms.length === 1 ? ' colaborador' : ' colaboradores') + '</p></div>' +
+        '<button type="button" class="icon-btn" data-act="menu-team" data-id="' + t.id + '" aria-label="Mais opções para ' + esc(t.name) + '" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></div>' +
+      '<div><span class="lbl">Responsável</span>' + (lead ? '<div class="lead">' + avatar(lead, 'av-lead') + esc(lead.name) + '</div>' : '<div class="lead none">' + ic('alert') + 'Sem responsável definido</div>') + '</div>' +
+      (chips ? '<div><span class="lbl">Zonas, clientes e alojamentos</span><div class="chips">' + chips + '</div></div>' : '') +
+      '<div class="team-foot"><div class="stack" aria-label="' + ms.length + ' elementos">' + shown.map(function(p){ return avatar(p, 'av-sm'); }).join('') +
+        (ms.length > shown.length ? '<span class="av av-sm">+' + (ms.length - shown.length) + '</span>' : '') + (ms.length ? '' : '<span class="muted-empty">Sem elementos</span>') + '</div>' +
+        '<button type="button" class="btn btn-soft btn-sm" data-act="open-team" data-id="' + t.id + '">Ver equipa' + ic('arrow') + '</button></div>' +
+    '</article>';
+  }).join('') + '<button type="button" class="team-new" data-act="create-team"><span class="plus">' + ic('plus') + '</span>Criar equipa</button>';
+}
+
+function teamMenu(anchor, t){
+  openMenu(anchor, [
+    {label:'Ver equipa', icon:'eye', run:function(){ openTeam(t.id); }},
+    {label:'Definir responsável', icon:'star', run:function(){ openTeam(t.id, 'lead'); }},
+    '-',
+    {label:'Arquivar equipa', icon:'archive', danger:true, run:function(){
+      var n = members(t.id).length;
+      openModal({title:'Arquivar ' + t.name + '?', body:(n ? 'Os ' + n + ' elementos ficam sem equipa. ' : '') + 'Os alojamentos com esta equipa por defeito deixam de ter sugestão automática.', confirm:'Arquivar equipa', danger:true,
+        run:function(){
+          D.people.forEach(function(p){ if (p.team === t.id) p.team = null; });
+          D.aloj.forEach(function(a){ if (a.def === t.id) a.def = null; });
+          D.teams = D.teams.filter(function(x){ return x !== t; });
+          refresh(); toast(t.name + ' arquivada.');
+        }});
+    }}
+  ]);
+}
+
+function openTeam(id, focus){
+  var src = id ? team(id) : null;
+  var st = {
+    name: src ? src.name : '', lead: src ? (src.lead || '') : '',
+    members: src ? members(src.id).map(function(p){ return p.id; }) : [],
+    zones: src ? src.zones.slice() : [], clients: src ? src.clients.slice() : [], aloj: src ? src.aloj.slice() : [],
+    defaults: src ? D.aloj.filter(function(a){ return a.def === src.id; }).map(function(a){ return a.id; }) : [],
+    err:''
+  };
+  var o = openDrawer(src ? 'Detalhe de ' + src.name : 'Criar equipa');
+
+  function draw(focusSel){
+    var memberRows = st.members.map(function(pid){
+      var p = person(pid); if (!p) return '';
+      var moving = p.team && (!src || p.team !== src.id) ? team(p.team) : null;
+      return '<div class="mrow">' + avatar(p, pid === st.lead ? 'av-lead' : '') + '<div class="grow"><b>' + esc(p.name) + (pid === st.lead ? ' <span class="tag">Responsável</span>' : '') + '</b>' +
+        (moving ? '<small class="move">Sai da ' + esc(moving.name) + ' ao guardar</small>' : '<small>' + esc(roleLabel(p)) + '</small>') + '</div>' +
+        accessPill(p) +
+        '<button type="button" class="icon-btn" data-d="rm-member" data-id="' + pid + '" aria-label="Remover ' + esc(p.name) + ' da equipa">' + ic('x') + '</button></div>';
+    }).join('');
+    var candidates = D.people.filter(function(p){ return !p.archived && p.role === 'collab' && st.members.indexOf(p.id) === -1; })
+      .sort(function(a, b){ return (a.team ? 1 : 0) - (b.team ? 1 : 0) || a.name.localeCompare(b.name, 'pt'); });
+    var alojRows = st.aloj.map(function(aid){
+      var a = alojById(aid); if (!a) return '';
+      var on = st.defaults.indexOf(aid) !== -1;
+      var other = !on && a.def && (!src || a.def !== src.id) ? team(a.def) : null;
+      return '<div class="mrow"><span class="av av-sm" style="border-radius:7px">' + ic('home').replace('class="i ', 'style="width:14px;height:14px" class="i ') + '</span><div class="grow"><b>' + esc(a.name) + '</b><small>' + esc(a.zone) + (other ? ' · Por defeito: ' + esc(other.name) : '') + '</small></div>' +
+        '<label class="def"><input type="checkbox" data-d="def" data-id="' + aid + '"' + (on ? ' checked' : '') + '><span class="sw sw-sm"></span>Por defeito</label>' +
+        '<button type="button" class="icon-btn" data-d="rm-aloj" data-id="' + aid + '" aria-label="Remover ' + esc(a.name) + '">' + ic('x') + '</button></div>';
+    }).join('');
+    var alojCand = D.aloj.filter(function(a){ return st.aloj.indexOf(a.id) === -1; });
+
+    o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+      '<div class="dr-scroll">' +
+        '<div class="dr-title"><p class="eyebrow">' + (src ? 'Equipa' : 'Nova equipa') + '</p><h2>' + esc(src ? src.name : 'Criar equipa') + '</h2>' +
+          '<p>' + (src ? st.members.length + (st.members.length === 1 ? ' elemento' : ' elementos') + ' · alterações aplicadas ao guardar.' : 'Define o nome, os elementos e onde a equipa trabalha.') + '</p></div>' +
+        '<div class="form" style="margin-top:18px">' +
+          '<div class="fld"><label for="tm-name">Nome da equipa</label><input id="tm-name" value="' + esc(st.name) + '" placeholder="Ex.: Equipa Porto Oriental"' + (st.err ? ' aria-invalid="true"' : '') + '><p class="err" role="alert">' + esc(st.err) + '</p></div>' +
+          '<div class="fld"><label for="tm-lead">Responsável</label><select id="tm-lead">' + opts([['', st.members.length ? 'Escolher responsável…' : 'Adiciona elementos primeiro']].concat(st.members.map(function(pid){ var p = person(pid); return [pid, p ? p.name : pid]; })), st.lead) + '</select>' +
+            '<p class="help">A responsável tem de pertencer à equipa.</p></div>' +
+        '</div>' +
+
+        '<div class="sec"><div class="sec-h"><h3>Elementos</h3><span>' + st.members.length + '</span></div>' +
+          (memberRows ? '<div class="mlist">' + memberRows + '</div>' : '<p class="muted-empty">Ainda sem elementos.</p>') +
+          '<div class="addrow"><select class="ctl" id="tm-add" aria-label="Escolher colaborador a adicionar">' +
+            '<option value="">Adicionar colaborador…</option>' + candidates.map(function(p){ var t = p.team && team(p.team); return '<option value="' + p.id + '">' + esc(p.name) + ' — ' + esc(t ? t.name : 'sem equipa') + '</option>'; }).join('') +
+          '</select><button type="button" class="btn btn-outline" data-d="add-member">' + ic('plus') + 'Adicionar</button></div>' +
+        '</div>' +
+
+        '<div class="sec"><div class="sec-h"><h3>Zonas</h3><span>' + st.zones.length + '</span></div>' +
+          '<div class="chips">' + (st.zones.length ? st.zones.map(function(z, i){ return '<span class="chip">' + ic('pin') + esc(z) + '<button type="button" class="chip-x" data-d="rm-zone" data-i="' + i + '" aria-label="Remover ' + esc(z) + '">' + ic('x') + '</button></span>'; }).join('') : '<span class="muted-empty">Sem zonas associadas.</span>') + '</div>' +
+          '<div class="addrow"><input class="ctl" id="tm-zone" placeholder="Ex.: Paranhos" aria-label="Nova zona"><button type="button" class="btn btn-outline" data-d="add-zone">' + ic('plus') + 'Adicionar</button></div>' +
+        '</div>' +
+
+        '<div class="sec"><div class="sec-h"><h3>Clientes</h3><span>' + st.clients.length + ' selecionados</span></div>' +
+          '<div class="chips">' + CLIENTS.map(function(c){ var on = st.clients.indexOf(c.id) !== -1; return '<button type="button" class="toggle-chip" data-d="client" data-id="' + c.id + '" aria-pressed="' + on + '">' + ic(on ? 'check' : 'building') + esc(c.name) + '</button>'; }).join('') + '</div>' +
+        '</div>' +
+
+        '<div class="sec"><div class="sec-h"><h3>Alojamentos</h3><span>' + st.aloj.length + '</span></div>' +
+          (alojRows ? '<div class="mlist">' + alojRows + '</div>' : '<p class="muted-empty">Sem alojamentos associados.</p>') +
+          (alojCand.length ? '<div class="addrow"><select class="ctl" id="tm-aloj" aria-label="Escolher alojamento"><option value="">Associar alojamento…</option>' +
+            alojCand.map(function(a){ return '<option value="' + a.id + '">' + esc(a.name) + ' — ' + esc(a.zone) + '</option>'; }).join('') + '</select><button type="button" class="btn btn-outline" data-d="add-aloj">' + ic('plus') + 'Associar</button></div>' : '') +
+          '<p class="note">' + ic('star') + '<span>A <b>equipa por defeito</b> é sugerida automaticamente quando se agenda uma limpeza nesse alojamento. Cada alojamento tem só uma.</span></p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button><button type="button" class="btn btn-primary" data-d="save">' + (src ? 'Guardar alterações' : 'Criar equipa') + '</button></div>';
+
+    $('#tm-name', o.el).addEventListener('input', function(e){ st.name = e.target.value; });
+    $('#tm-lead', o.el).addEventListener('change', function(e){ st.lead = e.target.value; draw('#tm-lead'); });
+    $('#tm-zone', o.el).addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); addZone(); } });
+    var f = focusSel && $(focusSel, o.el);
+    if (f) f.focus({preventScroll:true});
+  }
+  function addZone(){
+    var inp = $('#tm-zone', o.el), v = inp.value.trim();
+    if (v && st.zones.indexOf(v) === -1) st.zones.push(v);
+    draw('#tm-zone');
+  }
+  function keepScroll(fn){ var sc = $('.dr-scroll', o.el), y = sc ? sc.scrollTop : 0; fn(); var s2 = $('.dr-scroll', o.el); if (s2) s2.scrollTop = y; }
+
+  o.el.addEventListener('click', function(e){
+    var b = e.target.closest('[data-d]'); if (!b) return;
+    var d = b.dataset.d;
+    if (d === 'def') return; // tratado no change
+    switch (d){
+      case 'close': closeOverlay(o); return;
+      case 'rm-member': keepScroll(function(){ st.members = st.members.filter(function(x){ return x !== b.dataset.id; }); if (st.lead === b.dataset.id) st.lead = ''; draw(); }); return;
+      case 'add-member': keepScroll(function(){ var v = $('#tm-add', o.el).value; if (v){ st.members.push(v); if (!st.lead) st.lead = v; } draw('#tm-add'); }); return;
+      case 'rm-zone': keepScroll(function(){ st.zones.splice(+b.dataset.i, 1); draw(); }); return;
+      case 'add-zone': keepScroll(addZone); return;
+      case 'client': keepScroll(function(){ var i = st.clients.indexOf(b.dataset.id); if (i === -1) st.clients.push(b.dataset.id); else st.clients.splice(i, 1); draw('[data-d="client"][data-id="' + b.dataset.id + '"]'); }); return;
+      case 'rm-aloj': keepScroll(function(){ st.aloj = st.aloj.filter(function(x){ return x !== b.dataset.id; }); st.defaults = st.defaults.filter(function(x){ return x !== b.dataset.id; }); draw(); }); return;
+      case 'add-aloj': keepScroll(function(){ var v = $('#tm-aloj', o.el).value; if (v){ st.aloj.push(v); var a = alojById(v); if (!a.def) st.defaults.push(v); } draw('#tm-aloj'); }); return;
+      case 'save': save(); return;
+    }
+  });
+  o.el.addEventListener('change', function(e){
+    var c = e.target.closest('[data-d="def"]'); if (!c) return;
+    var id2 = c.dataset.id;
+    if (c.checked){ if (st.defaults.indexOf(id2) === -1) st.defaults.push(id2); }
+    else st.defaults = st.defaults.filter(function(x){ return x !== id2; });
+    keepScroll(function(){ draw('[data-d="def"][data-id="' + id2 + '"]'); });
+  });
+
+  function save(){
+    var name = st.name.trim();
+    st.err = !name ? 'Indica o nome da equipa.' : D.teams.some(function(t){ return t !== src && norm(t.name) === norm(name); }) ? 'Já existe uma equipa com este nome.' : '';
+    if (st.err){ draw('#tm-name'); $('.dr-scroll', o.el).scrollTop = 0; return; }
+    var t = src || {id:uid('t')};
+    t.name = name; t.lead = st.lead || null; t.zones = st.zones; t.clients = st.clients; t.aloj = st.aloj;
+    if (!src) D.teams.push(t);
+    D.people.forEach(function(p){ if (p.team === t.id && st.members.indexOf(p.id) === -1) p.team = null; });
+    st.members.forEach(function(pid){
+      var p = person(pid); if (!p) return;
+      if (p.team && p.team !== t.id){ var old = team(p.team); if (old && old.lead === pid) old.lead = null; }
+      p.team = t.id;
+    });
+    D.aloj.forEach(function(a){
+      if (st.defaults.indexOf(a.id) !== -1 && st.aloj.indexOf(a.id) !== -1) a.def = t.id;
+      else if (a.def === t.id) a.def = null;
+    });
+    closeOverlay(o);
+    if (!src && UI.tab !== 'teams'){ UI.tab = 'teams'; renderAll(); } else refresh();
+    toast(src ? t.name + ' atualizada.' : t.name + ' criada.');
+  }
+
+  draw(focus === 'lead' ? '#tm-lead' : '#tm-name');
+}
+
+/* ---------------- Ausências ---------------- */
+function panelAbs(){
+  var f = UI.fa;
+  var head = '<tr><th>Colaborador</th><th>Tipo</th><th>Período</th><th>Horário</th><th>Duração</th><th>Estado</th><th class="th-act"><span class="sr">Ações</span></th></tr>';
+  return '<div class="toolbar">' +
+      '<label class="search">' + ic('search') + '<span class="sr">Pesquisar por colaborador</span><input type="search" data-fa="q" value="' + esc(f.q) + '" placeholder="Pesquisar por colaborador…"></label>' +
+      '<div class="filters">' +
+        '<select data-fa="team" aria-label="Filtrar por equipa">' + opts([['','Todas as equipas']].concat(D.teams.map(function(t){ return [t.id, t.name]; })), f.team) + '</select>' +
+        '<select data-fa="type" aria-label="Filtrar por tipo">' + opts([['','Todos os tipos']].concat(Object.keys(ABS_TYPES).map(function(k){ return [k, ABS_TYPES[k]]; })), f.type) + '</select>' +
+        '<select data-fa="status" aria-label="Filtrar por estado">' + opts([['','Todos os estados'],['pending','Pendente'],['approved','Aprovada'],['rejected','Recusada']], f.status) + '</select>' +
+      '</div>' +
+    '</div>' +
+    '<div class="section-h"><h2>Próximas ausências</h2><span id="upCount"></span></div>' +
+    '<div class="tablewrap"><table class="tbl tbl-abs"><thead>' + head + '</thead><tbody id="upRows"></tbody></table></div>' +
+    '<div class="section-h" id="histSection" tabindex="-1"><h2>Ausências anteriores</h2><span id="pastCount"></span></div>' +
+    '<div class="tablewrap" id="histWrap"><table class="tbl tbl-abs"><thead>' + head + '</thead><tbody id="pastRows"></tbody></table><div id="histMore"></div></div>';
+}
+function filteredAbs(){
+  var f = UI.fa, q = norm(f.q);
+  return D.absences.filter(function(a){
+    var p = person(a.person); if (!p) return false;
+    if (q && norm(p.name).indexOf(q) === -1) return false;
+    if (f.team && p.team !== f.team) return false;
+    if (f.type && a.type !== f.type) return false;
+    if (f.status && a.status !== f.status) return false;
+    return true;
+  });
+}
+function absRow(a){
+  var p = person(a.person), t = p.team && team(p.team);
+  return '<tr data-abs="' + a.id + '" tabindex="0" aria-label="' + esc(p.name + ', ' + ABS_TYPES[a.type]) + '">' +
+    '<td><div class="who">' + avatar(p) + '<span><b>' + esc(p.name) + '</b><small>' + esc(t ? t.name : teamLabel(p)) + '</small></span></div></td>' +
+    '<td class="w">' + esc(ABS_TYPES[a.type]) + '</td>' +
+    '<td class="w num">' + esc(fmtRange(a.start, a.end)) + '</td>' +
+    '<td class="w num">' + esc(absHours(a)) + (a.allDay ? '' : '<span class="tag">Parcial</span>') + '</td>' +
+    '<td class="w num">' + esc(absDuration(a)) + '</td>' +
+    '<td class="n c-sub"><b style="font-weight:600;color:var(--ink)">' + esc(ABS_TYPES[a.type]) + '</b> · ' + esc(fmtRange(a.start, a.end)) + '<br>' + esc(absHours(a)) + ' · ' + esc(absDuration(a)) + '</td>' +
+    '<td class="c-pill">' + absPill(a) + '</td>' +
+    '<td class="c-act"><button type="button" class="icon-btn" data-act="menu-abs" data-id="' + a.id + '" aria-label="Mais opções" aria-haspopup="menu" aria-expanded="false">' + ic('more') + '</button></td>' +
+  '</tr>';
+}
+function emptyRow(msg){ return '<tr class="row-empty"><td colspan="7"><div class="empty"><b>' + msg + '</b>' + (hasAbsFilter() ? 'Ajusta a pesquisa ou os filtros. <button type="button" class="link" data-act="clear-fa">Limpar filtros</button>' : '') + '</div></td></tr>'; }
+function hasAbsFilter(){ var f = UI.fa; return !!(f.q || f.team || f.type || f.status); }
+function renderAbsRows(){
+  var up = $('#upRows'); if (!up) return;
+  var list = filteredAbs();
+  var future = list.filter(isUpcoming).sort(function(a, b){ return a.start < b.start ? -1 : a.start > b.start ? 1 : 0; });
+  var past = list.filter(function(a){ return !isUpcoming(a); }).sort(function(a, b){ return a.start < b.start ? 1 : -1; });
+  up.innerHTML = future.length ? future.map(absRow).join('') : emptyRow('Sem ausências próximas');
+  var LIMIT = 3, shown = UI.histAll ? past : past.slice(0, LIMIT);
+  $('#pastRows').innerHTML = shown.length ? shown.map(absRow).join('') : emptyRow('Sem ausências anteriores');
+  $('#upCount').textContent = future.length + (future.length === 1 ? ' registo' : ' registos');
+  $('#pastCount').textContent = past.length + (past.length === 1 ? ' registo' : ' registos') + ' · anteriores a ' + fmtDay(TODAY, true);
+  $('#histMore').innerHTML = past.length > LIMIT
+    ? '<div class="more-row"><button type="button" class="link" data-act="history">' + (UI.histAll ? 'Mostrar só as mais recentes' : 'Ver histórico completo (' + past.length + ')') + '</button></div>' : '';
+}
+function absMenu(anchor, a){
+  var p = person(a.person), items = [];
+  if (isUpcoming(a) && a.status === 'pending'){
+    items.push({label:'Aprovar ausência', icon:'check', run:function(){ a.status = 'approved'; refresh(); toast('Ausência de ' + p.name + ' aprovada.'); }});
+    items.push({label:'Recusar ausência', icon:'x2', run:function(){ a.status = 'rejected'; refresh(); toast('Ausência de ' + p.name + ' recusada.'); }});
+  }
+  items.push({label:'Ver colaborador', icon:'user', run:function(){ openPerson(p.id); }});
+  if (isUpcoming(a)){
+    items.push('-');
+    items.push({label:'Cancelar ausência', icon:'trash', danger:true, run:function(){
+      openModal({title:'Cancelar ausência?', body:'A ausência de ' + esc(p.name) + ' (' + esc(ABS_TYPES[a.type]) + ', ' + esc(fmtRange(a.start, a.end)) + ') é removida.', confirm:'Cancelar ausência', danger:true,
+        run:function(){ D.absences = D.absences.filter(function(x){ return x !== a; }); refresh(); toast('Ausência cancelada.'); }});
+    }});
+  }
+  openMenu(anchor, items);
+}
+function toggleHistory(){
+  UI.histAll = !UI.histAll;
+  renderHeadActions(); renderAbsRows();
+  if (UI.histAll){
+    var s = $('#histSection'), w = $('#histWrap');
+    viewport.scrollTo({top:s.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 80, behavior:'smooth'});
+    w.classList.remove('flash'); void w.offsetWidth; w.classList.add('flash');
+  }
+}
+
+function openAbsence(preset){
+  preset = preset || {};
+  var st = {person:preset.person || '', type:'ferias', start:addDays(TODAY, 1), end:addDays(TODAY, 1), allDay:true, from:'09:00', to:'13:00', status:'approved', note:''};
+  var o = openDrawer('Registar ausência');
+  var eligible = D.people.filter(function(p){ return !p.archived && p.role !== 'admin'; });
+  var groups = D.teams.map(function(t){ return [t.name, eligible.filter(function(p){ return p.team === t.id; })]; })
+    .concat([['Sem equipa', eligible.filter(function(p){ return !p.team; })]]).filter(function(g){ return g[1].length; });
+
+  o.el.innerHTML = '<button type="button" class="icon-btn dr-close" data-d="close" aria-label="Fechar">' + ic('x') + '</button>' +
+    '<form id="abForm" novalidate style="display:contents">' +
+    '<div class="dr-scroll">' +
+      '<div class="dr-title"><p class="eyebrow">Ausências</p><h2>Registar ausência</h2><p>Pode ser um dia inteiro, vários dias ou apenas algumas horas.</p></div>' +
+      '<div class="form">' +
+        '<div class="fld"><label for="ab-person">Colaborador</label><select id="ab-person" name="person"><option value="">Escolher colaborador…</option>' +
+          groups.map(function(g){ return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function(p){ return '<option value="' + p.id + '"' + (p.id === st.person ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('') + '</optgroup>'; }).join('') +
+        '</select><p class="err" data-err="person" role="alert"></p></div>' +
+        '<fieldset class="fld" style="border:0;margin:0;padding:0"><legend class="flabel" style="padding:0">Tipo</legend><div class="radios">' +
+          Object.keys(ABS_TYPES).map(function(k){ return '<label><input type="radio" name="type" value="' + k + '"' + (k === st.type ? ' checked' : '') + '><span>' + ABS_TYPES[k] + '</span></label>'; }).join('') +
+        '</div></fieldset>' +
+        '<div class="grid2">' +
+          fld('ab-start', 'Data de início', '<input id="ab-start" name="start" type="date" value="' + st.start + '">') +
+          fld('ab-end', 'Data de fim', '<input id="ab-end" name="end" type="date" value="' + st.end + '">') +
+        '</div>' +
+        '<label class="switch-row"><input type="checkbox" name="allDay" checked><span class="sw"></span><span><b>Dia inteiro</b><small>Desliga para registar uma ausência parcial, durante algumas horas.</small></span></label>' +
+        '<div class="grid2" id="ab-times" hidden>' +
+          fld('ab-from', 'Hora de início', '<input id="ab-from" name="from" type="time" step="900" value="' + st.from + '">') +
+          fld('ab-to', 'Hora de fim', '<input id="ab-to" name="to" type="time" step="900" value="' + st.to + '">') +
+        '</div>' +
+        '<fieldset class="fld" style="border:0;margin:0;padding:0"><legend class="flabel" style="padding:0">Estado</legend><div class="radios">' +
+          '<label><input type="radio" name="status" value="approved" checked><span>Aprovada</span></label>' +
+          '<label><input type="radio" name="status" value="pending"><span>Pendente de aprovação</span></label>' +
+        '</div></fieldset>' +
+        '<div class="fld"><label for="ab-note">Nota <span class="opt">(opcional)</span></label><textarea id="ab-note" name="note" placeholder="Ex.: consulta marcada no centro de saúde"></textarea></div>' +
+        '<div id="ab-warn"></div>' +
+        '<div class="summary" aria-live="polite"><h3>Resumo</h3><div id="ab-sum"></div>' +
+          '<p class="note">' + ic('cal') + '<span>Numa fase seguinte, esta ausência vai bloquear atribuições incompatíveis no Planeamento.</span></p></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dr-foot"><button type="button" class="btn btn-outline" data-d="close">Cancelar</button><button type="submit" class="btn btn-primary">Registar ausência</button></div>' +
+    '</form>';
+
+  var fm = $('#abForm', o.el);
+  function read(){
+    st.person = fm.person.value; st.type = fm.querySelector('[name=type]:checked').value;
+    st.start = fm.start.value; st.end = fm.end.value; st.allDay = fm.allDay.checked;
+    st.from = fm.from.value; st.to = fm.to.value; st.status = fm.querySelector('[name=status]:checked').value; st.note = fm.note.value.trim();
+  }
+  function validDates(){ return st.start && st.end && st.end >= st.start && (st.allDay || (st.from && st.to && mins(st.to) > mins(st.from))); }
+  function overlap(){
+    return D.absences.find(function(a){
+      if (a.person !== st.person || a.status === 'rejected') return false;
+      if (a.end < st.start || a.start > st.end) return false;
+      if (!a.allDay && !st.allDay) return mins(a.from) < mins(st.to) && mins(st.from) < mins(a.to);
+      return true;
+    });
+  }
+  function update(){
+    read();
+    $('#ab-times', o.el).hidden = st.allDay;
+    var sum = $('#ab-sum', o.el);
+    if (validDates()){
+      var fake = {start:st.start, end:st.end, allDay:st.allDay, from:st.from, to:st.to};
+      var p = st.person && person(st.person);
+      sum.innerHTML = (p ? '<div class="sum-row"><span>Colaborador</span><b>' + esc(p.name) + '</b></div>' : '') +
+        '<div class="sum-row"><span>Tipo</span><b>' + ABS_TYPES[st.type] + (st.allDay ? '' : ' · parcial') + '</b></div>' +
+        '<div class="sum-row"><span>Período</span><b>' + esc(fmtRange(st.start, st.end)) + '</b></div>' +
+        '<div class="sum-row"><span>Horário</span><b>' + esc(absHours(fake)) + '</b></div>' +
+        '<div class="sum-row"><span>Duração</span><b>' + esc(absDuration(fake)) + '</b></div>';
+    } else sum.innerHTML = '<div class="sum-row"><span>Completa as datas' + (st.allDay ? '' : ' e as horas') + ' para ver a duração.</span></div>';
+    var ov = st.person && validDates() && overlap();
+    $('#ab-warn', o.el).innerHTML = ov ? '<div class="warnbox">' + ic('alert') + '<span>' + esc(person(st.person).name) + ' já tem uma ausência neste período: ' + esc(ABS_TYPES[ov.type]) + ', ' + esc(fmtRange(ov.start, ov.end)) + ' (' + esc(absHours(ov)) + ').</span></div>' : '';
+  }
+  fm.start.addEventListener('change', function(){ if (!fm.end.value || fm.end.value < fm.start.value) fm.end.value = fm.start.value; update(); });
+  fm.addEventListener('input', update);
+  fm.addEventListener('change', update);
+  fm.addEventListener('submit', function(e){
+    e.preventDefault(); read();
+    var errs = {};
+    if (!st.person) errs.person = 'Escolhe o colaborador.';
+    if (!st.start) errs.start = 'Indica a data de início.';
+    if (!st.end) errs.end = 'Indica a data de fim.';
+    else if (st.start && st.end < st.start) errs.end = 'A data de fim não pode ser anterior ao início.';
+    if (!st.allDay){
+      if (!st.from) errs.from = 'Indica a hora de início.';
+      if (!st.to) errs.to = 'Indica a hora de fim.';
+      else if (st.from && mins(st.to) <= mins(st.from)) errs.to = 'A hora de fim tem de ser depois do início.';
+    }
+    showErrs(fm, errs);
+    if (Object.keys(errs).length) return;
+    var a = {id:uid('a'), person:st.person, type:st.type, start:st.start, end:st.end, allDay:st.allDay, from:st.allDay ? '' : st.from, to:st.allDay ? '' : st.to, status:st.status, note:st.note};
+    D.absences.push(a);
+    closeOverlay(o);
+    if (UI.tab !== 'abs'){ UI.tab = 'abs'; renderAll(); } else refresh();
+    toast('Ausência registada: ' + person(a.person).name + ' · ' + absDuration(a) + (isUpcoming(a) ? '' : ' (histórico)') + '.');
+  });
+  update();
+  focusIn(o.el);
+}
+
+/* =========================================================
+   Eventos globais
+   ========================================================= */
+device.addEventListener('click', function(e){
+  var b = e.target.closest('[data-act]');
+  if (b && viewport.contains(b)){
+    e.preventDefault();
+    var id = b.dataset.id;
+    switch (b.dataset.act){
+      case 'tab': setTab(b.dataset.tab); return;
+      case 'add-person': openAddPerson(); return;
+      case 'invite-manager': openAddPerson('manager'); return;
+      case 'create-team': openTeam(null); return;
+      case 'add-absence': openAbsence(); return;
+      case 'history': toggleHistory(); return;
+      case 'open-person': openPerson(id); return;
+      case 'open-team': openTeam(id); return;
+      case 'menu-person': personMenu(b, person(id)); return;
+      case 'menu-team': teamMenu(b, team(id)); return;
+      case 'menu-abs': absMenu(b, D.absences.find(function(a){ return a.id === id; })); return;
+      case 'clear-fc': UI.fc = {q:'', role:'', team:'', access:''}; renderPanel(); return;
+      case 'clear-fa': UI.fa = {q:'', team:'', type:'', status:''}; renderPanel(); return;
+      case 'nav': toast('“' + b.dataset.label + '” fica disponível num passo seguinte.'); return;
+      case 'area': toast('Área ativa: Limpezas.'); return;
+      case 'app-menu': openMenu(b, [
+        {label:'Dados da empresa', icon:'building', run:function(){ toast('Dados da empresa — Módulo 1.'); }},
+        {label:'Definições', icon:'edit', run:function(){ toast('Definições — simulação.'); }},
+        '-',
+        {label:'Terminar sessão', icon:'arrow', run:function(){ toast('Sessão terminada (simulação).'); }}
+      ]); return;
+    }
+  }
+  var row = e.target.closest('tr[data-person], tr[data-abs]');
+  if (row && !e.target.closest('button')){
+    if (row.dataset.person) openPerson(row.dataset.person);
+    else { var a = D.absences.find(function(x){ return x.id === row.dataset.abs; }); if (a) openPerson(a.person); }
+  }
+});
+viewport.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var row = e.target.closest && e.target.matches('tr[data-person], tr[data-abs]') ? e.target : null;
+  if (!row) return;
+  e.preventDefault();
+  if (row.dataset.person) openPerson(row.dataset.person);
+  else { var a = D.absences.find(function(x){ return x.id === row.dataset.abs; }); if (a) openPerson(a.person); }
+});
+function onFilter(e){
+  var t = e.target;
+  if (t.dataset.fc != null){ UI.fc[t.dataset.fc] = t.value; renderColabRows(); }
+  if (t.dataset.fa != null){ UI.fa[t.dataset.fa] = t.value; renderAbsRows(); }
+}
+$('#panel').addEventListener('input', onFilter);
+$('#panel').addEventListener('change', onFilter);
+
+$('#modeSeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-mode]'); if (!b) return;
+  UI.mode = b.dataset.mode;
+  $$('#modeSeg button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+  if (UI.mode === 'micro' && UI.fc.role === 'manager' && !hasManager()) UI.fc.role = '';
+  closeAll(); renderAll();
+  toast(UI.mode === 'micro' ? 'Microempresa: a administradora também é gestora.' : 'Responsabilidades separadas: pode ser convidada uma gestora.');
+});
+$('#widthSeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-w]'); if (!b) return;
+  $$('#widthSeg button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+  $('#stage').dataset.w = b.dataset.w; closeMenu();
+});
+$('#resetBtn').addEventListener('click', function(){
+  D = seed(); UI.fc = {q:'', role:'', team:'', access:''}; UI.fa = {q:'', team:'', type:'', status:''}; UI.histAll = false;
+  closeAll(); renderAll(); toast('Dados de demonstração repostos.');
+});
+
+$('[data-act="app-menu"]').innerHTML = ic('menu');
+renderAll();
+})();
+</script>
+</body>
+</html>

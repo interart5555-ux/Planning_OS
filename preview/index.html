@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AppOS · Limpezas — Fase 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{ --g:#17643e; --g2:#3f9a68; --ink:#111827; --mut:#6b7280; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f8f7; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans","Helvetica Neue",Arial,sans-serif;line-height:1.5}
+  .top{border-bottom:1px solid var(--line);padding:18px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .logo{width:30px;height:30px;border-radius:9px;background:var(--g);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+  .top b{font-size:16px}
+  .top span{color:var(--mut);font-size:14px}
+  main{max-width:960px;margin:0 auto;padding:28px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  .lead{color:var(--mut);margin:0 0 24px;max-width:62ch}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:32px 0 12px;font-weight:600}
+  .card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+  .num{width:30px;height:30px;flex:0 0 auto;border-radius:9px;background:var(--soft);color:var(--g);display:grid;place-items:center;font-weight:700;font-size:14px}
+  .body{flex:1 1 260px;min-width:0}
+  .body b{display:block;font-size:15px}
+  .body p{margin:2px 0 0;color:var(--mut);font-size:14px}
+  .links{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  a.btn{display:inline-block;padding:7px 12px;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:#fff}
+  a.btn.pri{background:var(--g);border-color:var(--g);color:#fff}
+  a.btn:hover{border-color:var(--g2)}
+  .tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--g);white-space:nowrap}
+  .tag.opt{background:#fff7ed;color:#9a3412}
+  .tag.hold{background:#f3f4f6;color:var(--mut)}
+  .card.hold{opacity:.7}
+  .note{border:1px solid var(--line);border-left:3px solid var(--g);border-radius:12px;padding:14px 16px;background:var(--soft);font-size:14px;color:#374151}
+  .note b{color:var(--ink)}
+  ul.compact{margin:8px 0 0;padding-left:18px;color:var(--mut);font-size:14px}
+  footer{margin-top:36px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo">L</div><b>AppOS · Limpezas</b><span>Pré-visualizações — Fase 1</span></div>
+<main>
+  <h1>Fase 1 concluída</h1>
+  <p class="lead">Simulação visual dos módulos, em português de Portugal. Sem base de dados, sem contas, sem pagamentos e sem notificações reais: os dados de exemplo ficam guardados no browser e podem ser repostos a qualquer momento.</p>
+
+  <h2>Módulos base — sempre ativos</h2>
+
+  <div class="card">
+    <div class="num">1</div>
+    <div class="body"><b>Empresa e utilizadores</b><p>Dados da empresa, perfis e primeiro arranque.</p></div>
+    <div class="links"><a class="btn pri" href="module-1-onboarding.html">Abrir</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">2</div>
+    <div class="body"><b>Equipas</b><p>Colaboradoras, equipas e disponibilidade.</p></div>
+    <div class="links"><a class="btn pri" href="module-2-equipas-react.html">Abrir</a><a class="btn" href="module-2-equipas.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">3</div>
+    <div class="body"><b>Clientes, alojamentos e unidades</b><p>Moradas, unidades e configuração de cada alojamento.</p></div>
+    <div class="links"><a class="btn pri" href="module-3-clientes-react.html">Abrir</a><a class="btn" href="module-3-clientes.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">4</div>
+    <div class="body"><b>Planeamento</b><p>Agenda e distribuição das limpezas pela equipa.</p></div>
+    <div class="links"><a class="btn pri" href="module-4-planeamento-react.html">Abrir</a><a class="btn" href="module-4-planeamento.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">5</div>
+    <div class="body"><b>Execução de trabalho</b><p>O dia da colaboradora no telemóvel: tarefas, fotografias, avisos e mensagens.</p></div>
+    <div class="links"><a class="btn pri" href="module-5-execucao-react.html">Abrir</a><a class="btn" href="module-5-execucao.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">6</div>
+    <div class="body"><b>Aprovações e histórico</b><p>Validação das limpezas concluídas; as limpezas sem ocorrências são aprovadas automaticamente.</p></div>
+    <div class="links"><a class="btn pri" href="module-6-aprovacoes-react.html">Abrir</a><a class="btn" href="module-6-aprovacoes.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">10</div>
+    <div class="body"><b>Mensagens e notificações</b><p>Conversas com a equipa e com o cliente, avisos do dia e mensagens dentro da limpeza.</p></div>
+    <div class="links"><a class="btn pri" href="module-10-mensagens-react.html">Abrir</a><a class="btn" href="module-10-mensagens-react.html?vista=hoje">Hoje</a><a class="btn" href="module-10-mensagens.html">Desenho</a><span class="tag">Base</span></div>
+  </div>
+
+  <h2>Módulos opcionais — a empresa decide</h2>
+
+  <div class="card">
+    <div class="num">7</div>
+    <div class="body"><b>Rendimentos</b><p>Faturação, custos e margem por cliente e por período.</p></div>
+    <div class="links"><a class="btn pri" href="module-7-rendimentos-react.html">Abrir</a><a class="btn" href="module-7-rendimentos.html">Desenho</a><span class="tag opt">Opcional</span></div>
+  </div>
+
+  <div class="card">
+    <div class="num">8</div>
+    <div class="body"><b>Inventário</b><p>Produtos, stock, consumos, reposições e compras. O stock do cliente nunca conta como custo da empresa.</p></div>
+    <div class="links"><a class="btn pri" href="module-8-inventario-react.html">Abrir</a><a class="btn" href="module-8-inventario.html">Desenho</a><span class="tag opt">Opcional</span></div>
+  </div>
+
+  <div class="card hold">
+    <div class="num">9</div>
+    <div class="body"><b>Serviços ligados</b><p>Lavandaria e outros parceiros. Fica para a fase seguinte.</p></div>
+    <div class="links"><span class="tag hold">Em espera</span></div>
+  </div>
+
+  <h2>Como experimentar</h2>
+  <div class="note">
+    <b>Perfis e módulos.</b> Na barra de topo de cada pré-visualização podes trocar de perfil, ligar e desligar os módulos opcionais e repor os dados de exemplo.
+    <ul class="compact">
+      <li>Os módulos partilham os mesmos dados no browser: uma mensagem enviada na app da colaboradora aparece nas conversas da gestora.</li>
+      <li>Desligar um módulo opcional esconde os menus, mas não apaga nada.</li>
+      <li>A versão React precisa de ligação à internet para carregar os tipos de letra e o Tailwind.</li>
+    </ul>
+  </div>
+
+  <footer>Fase 1 — simulação visual. Base de dados, contas, pagamentos e envios reais ficam para a Fase 2.</footer>
+</main>
+</body>
+</html>
