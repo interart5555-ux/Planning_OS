@@ -1,6 +1,6 @@
 # Referência — Questionário do Perfil de Empresa
 
-Usado por `SKILL.md` desta skill. Contém as perguntas estáticas a fazer; as respostas de uma empresa concreta vivem em `empresas/<slug>/perfil-empresa.md`, nunca aqui.
+Usado por `SKILL.md` desta skill. Contém as perguntas estáticas a fazer; as respostas de uma empresa concreta vivem em `<slug>/perfil-empresa.md`, um diretório irmão da raiz do template, nunca aqui.
 
 ## 1. Identificação
 - Nome da empresa.

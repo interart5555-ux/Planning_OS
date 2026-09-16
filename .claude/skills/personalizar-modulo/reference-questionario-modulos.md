@@ -1,6 +1,6 @@
 # Referência — Questionário Módulo a Módulo
 
-Usado por `SKILL.md` desta skill. Contém o padrão geral e as perguntas específicas de cada um dos 9 módulos personalizáveis. As respostas de uma empresa concreta vivem em `empresas/<slug>/modulos/<nome>.md`, nunca aqui.
+Usado por `SKILL.md` desta skill. Contém o padrão geral e as perguntas específicas de cada um dos 9 módulos personalizáveis. As respostas de uma empresa concreta vivem em `<slug>/modulos/<nome>.md`, um diretório irmão da raiz do template, nunca aqui.
 
 ## Padrão geral
 
