@@ -3,3 +3,4 @@
 .claude/scheduled_tasks.lock
 .worktrees/
 .env
+.superpowers/
