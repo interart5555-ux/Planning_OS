@@ -19,6 +19,7 @@ Além do vocabulário-base já herdado de `perfil-empresa.md`, cada módulo cobr
 - Modelo de equipa: fixas por cliente/zona, ou atribuição rotativa dia a dia?
 - Que tipos de ausência existem de facto (férias, folga, baixa, formação, outro) e se há aprovação formal ou é informal.
 - Modelo de pagamento: valor/hora fixo, salário, por tarefa?
+- Quem pode ver o valor que cada pessoa recebe: só a gestão, ou cada colaboradora vê o seu? (Alimenta o modelo de dados de `/implementar-empresa` — o que é só da gestão fica fora das tabelas que a colaboradora lê.)
 - Como é dado acesso a uma nova colaboradora hoje (convite formal, ensino direto)?
 
 ## clientes
@@ -27,6 +28,7 @@ Além do vocabulário-base já herdado de `perfil-empresa.md`, cada módulo cobr
 - Há horários de entrada/saída relevantes (check-in/check-out), ou o conceito não se aplica?
 - Usam alguma plataforma de reservas externa (Airbnb, Booking) que precise sincronizar?
 - Quem fornece o que é usado no local — a empresa ou o cliente?
+- O que o cliente paga (tarifa por hora, por trabalho, por local) pode ser visto por quem executa, ou é só da gestão?
 
 ## planeamento
 - Vista mais usada no dia a dia: dia, semana ou mês?
@@ -61,6 +63,7 @@ Depois perguntar o que falta:
 - Prazo de pagamento (dias até vencimento)?
 - Modelo de custo de equipa: só valor/hora, ou com deslocações à parte?
 - O que conta como alerta de saúde financeira (limites de margem, atraso de recebimento)?
+- Há algum valor deste módulo (faturas, pagamentos à equipa, margens) que alguém além da gestão possa ver? Por omissão, nenhum.
 
 ## inventario (opcional)
 - Confirmar com o que já veio do processo de trabalho: há stock, é da empresa, do cliente, ou ambos?

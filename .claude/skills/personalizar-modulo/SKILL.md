@@ -34,6 +34,8 @@ Se o módulo pedido for `rendimentos`, `inventario` ou `servicosLigados` e `modu
 
 Ler `reference-questionario-modulos.md` (na mesma pasta deste ficheiro). Ir à secção "Padrão geral" e depois à secção com o nome exato do módulo pedido.
 
+Antes da primeira pergunta, ler a implementação do módulo no template: `src/modules/<modulo>/` (`types.ts`, `config.ts`, `mockData.ts`, `rules.ts` e os `components/` relevantes; `servicosLigados` não tem). Usar o questionário como lista de *temas*: onde o código já tem uma resposta concreta (valor por omissão, estado, convenção visual), perguntar para confirmar ou ajustar esse valor, citando-o, em vez de perguntar em abstrato. O mockup do Passo 6 reutiliza a linguagem visual que o código já tem.
+
 - Para `execucao` e `aprovacoes`: seguir a exceção do padrão geral — não repetir a pergunta de processo; decompor a narrativa "Ciclo de trabalho" já lida no Passo 3 nos campos concretos (checklist, tipos de evidência, tipos de anomalia, critério de aprovação automática) e confirmar com o utilizador que a decomposição está correta antes de avançar, só depois perguntando os campos mecânicos restantes dessa secção.
 - Para os restantes módulos: perguntar os pontos da secção do módulo, um de cada vez.
 
@@ -64,4 +66,8 @@ Mostrar o link e perguntar se está aprovado. Se pedirem ajustes, voltar ao Pass
 
 ## Passo 9 — Reportar e sugerir próximo passo
 
-Confirmar o caminho do ficheiro gravado e o link do mockup (se o módulo foi recusado no Passo 4, não há mockup — reportar só o caminho do ficheiro e a recusa registada). Olhar para `modulos_validados` em `perfil-empresa.md` e sugerir o próximo módulo por validar, seguindo a ordem recomendada: Equipas → Clientes → Planeamento → Execução → Aprovações → Mensagens → opcionais ativados.
+Confirmar o caminho do ficheiro gravado e o link do mockup (se o módulo foi recusado no Passo 4, não há mockup — reportar só o caminho do ficheiro e a recusa registada). Olhar para `modulos_validados` em `perfil-empresa.md` e sugerir o próximo módulo por validar, seguindo a ordem recomendada: Equipas → Clientes → Planeamento → Execução → Aprovações → Mensagens → opcionais ativados. Quando todos os módulos base e opcionais ativados estiverem validados, o próximo passo é `/implementar-empresa`.
+
+## Passo 10 — Retrospetiva
+
+Seguir a secção "Retrospetiva" de `<raiz-do-template>/docs/superpowers/melhoria-continua.md` para este módulo: houve retrabalho (mockup refeito, pergunta repetida, correção do utilizador) com causa no procedimento? Se não, não escrever nada. Se sim e cumprir o critério desse ficheiro, acrescentar lá a entrada e propor ao utilizador a alteração à skill — nunca a aplicar sem aprovação.

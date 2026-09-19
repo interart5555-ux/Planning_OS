@@ -46,3 +46,7 @@ Depois de recolhidas as seis respostas de processo, aplicar a lógica de deriva�
 ## Passo 6 — Reportar e sugerir próximo passo
 
 Confirmar o caminho do ficheiro criado, listar os módulos opcionais ativados (se algum), e sugerir a ordem recomendada para `/personalizar-modulo`: Equipas → Clientes → Planeamento → Execução → Aprovações → Mensagens → opcionais ativados.
+
+## Passo 7 — Retrospetiva
+
+Seguir a secção "Retrospetiva" de `<raiz-do-template>/docs/superpowers/melhoria-continua.md` para este perfil: houve retrabalho (pergunta repetida, secção reescrita, correção do utilizador) com causa no procedimento? Se não, não escrever nada. Se sim e cumprir o critério desse ficheiro, acrescentar lá a entrada e propor ao utilizador a alteração à skill — nunca a aplicar sem aprovação.
