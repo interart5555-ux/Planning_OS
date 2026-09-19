@@ -5,7 +5,7 @@ description: Use when personalizing one specific AppOS template module (equipas,
 
 # Personalizar Módulo
 
-Personaliza um módulo específico do template AppOS para uma empresa já identificada por `/personalizar-empresa`. Corre-se uma vez por módulo, em qualquer ordem, em qualquer sessão. Nunca lê nem escreve `src/` ou `preview/` do template — só produz um documento em `<slug>/modulos/` (dentro do diretório da empresa, irmão da raiz do template) e um mockup Artifact.
+Personaliza um módulo específico do template AppOS para uma empresa já identificada por `/personalizar-empresa`. Corre-se uma vez por módulo, em qualquer ordem, em qualquer sessão. Lê `src/modules/<modulo>/` do template para ancorar perguntas e mockup (Passo 5), mas nunca escreve em `src/` nem em `preview/` — só produz um documento em `<slug>/modulos/` (dentro do diretório da empresa, irmão da raiz do template) e um mockup Artifact.
 
 ## Passo 1 — Identificar o módulo pedido
 

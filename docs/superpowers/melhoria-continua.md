@@ -52,7 +52,7 @@ A poda também é proposta, não aplicada: o utilizador aprova.
 | M-004 | Rever o estado vivo, não só os ficheiros | `implementar-empresa/reference-verificacao.md` secção A | aplicada 2026-09-19 |
 | M-005 | Testes de segurança têm de conseguir falhar | `implementar-empresa/reference-verificacao.md` secção B | aplicada 2026-09-19 |
 | M-006 | O comportamento do código ganha ao comentário | `implementar-empresa` Passo 2.3 + `reference-verificacao.md` secção C | aplicada 2026-09-19 |
-| M-007 | `personalizar-modulo` lê `src/` do template para ancorar perguntas e mockups | `personalizar-modulo` Passo 5 (cabeçalho por alterar) | parcialmente aplicada |
+| M-007 | `personalizar-modulo` lê `src/` do template para ancorar perguntas e mockups | `personalizar-modulo` cabeçalho e Passo 5 | aplicada 2026-09-19 |
 
 ## Entradas
 
@@ -156,9 +156,7 @@ A poda também é proposta, não aplicada: o utilizador aprova.
 - **Causa:** procedimento — a regra impedia a leitura que teria dado a resposta.
 - **Alteração ao procedimento:** ler `src/modules/<modulo>/` (types, config, mockData, rules,
   components) antes do questionário e do mockup; nunca escrever.
-- **Estado:** proposta (2026-09-18); parcialmente aplicada (2026-09-19). O Passo 5 já manda ler
-  `src/modules/<modulo>/`, mas a frase do cabeçalho "nunca lê nem escreve `src/`" continua lá: a
-  edição foi bloqueada pelo classificador de permissões e aguarda o utilizador.
+- **Estado:** proposta (2026-09-18); aplicada (2026-09-19).
 
 ## Retiradas e fundidas
 
