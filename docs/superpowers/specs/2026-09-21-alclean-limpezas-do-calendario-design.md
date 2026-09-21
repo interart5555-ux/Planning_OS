@@ -44,9 +44,33 @@ O esquema foi desenhado para isto e nunca foi ligado:
 
 Nada disto é preciso inventar. O que falta é o que preenche estas colunas.
 
+## O que a Fase 1 já tinha decidido
+
+Isto não é um requisito novo. A captura de 2026-09-17 já o dizia, e ficou por
+cumprir:
+
+- `alclean/perfil-empresa.md:42` — "Existem os 2 casos: limpezas geradas pelas
+  reservas do iCal das plataformas (ex. Airbnb/Booking), e limpezas criadas
+  manualmente pela gestora. Contudo, quem decide e atribui as limpezas às
+  colaboradoras ou equipas é sempre a gestora."
+- `alclean/modulos/clientes.md:16` — as plataformas são Airbnb e Booking.com,
+  o que corresponde ao enum `calendar_platform` já existente.
+- `alclean/modulos/planeamento.md` — as viradas rápidas são "críticas e
+  frequentes"; depois de duas iterações ficou decidido que se sinalizam **só**
+  com o ponto vermelho (`PriorityDot`), com o texto completo reservado à lista
+  de alertas.
+- `alclean/modulos/mensagens.md:15` — os avisos de iCal só existem para a
+  semana em curso (ver "Os avisos", abaixo).
+
+**Lição de processo:** a primeira versão deste desenho foi escrita sem reler
+estes documentos, e chegou a uma regra de avisos diferente — e pior — do que a
+validada. O utilizador é que perguntou "isto não tinha já sido definido na
+Fase 1?". Antes de desenhar seja o que for para uma empresa personalizada,
+lê `<empresa>/perfil-empresa.md` e `<empresa>/modulos/*.md`.
+
 ## Decisões tomadas com a empresa
 
-Registadas em conversa a 2026-09-21:
+Confirmadas em conversa a 2026-09-21, a detalhar o que acima ficou em aberto:
 
 1. Uma saída com entrada de outro hóspede no mesmo dia é **prioritária**, com
    ponto vermelho no cartão do Planeamento.
@@ -179,11 +203,30 @@ passou nunca é alterada nem apagada.
 "Sem ninguém atribuído" significa zero linhas em `job_assignments`. "Por
 publicar" significa `status = 'unpublished'`.
 
-**Os avisos.** Vão para `notices`, com `audience='gestao'`, e aparecem no quadro
-do ecrã "Hoje" — que até hoje só recebia confirmações de leitura de mensagens.
-Um aviso por limpeza afetada, substituído se a mesma limpeza voltar a mudar, para
-não acumular. Texto que diz o que mudou e o que fazer, não "erro de
-sincronização".
+**Os avisos.** Seguem a regra validada em `alclean/modulos/mensagens.md:15`, e
+não a que este documento propunha numa primeira versão:
+
+> nova reserva ou alteração via iCal — **só gera aviso quando a reserva cai na
+> semana em curso**, reservas mais distantes não geram aviso
+
+Portanto: gera aviso uma **reserva nova** cuja limpeza cai na semana em curso, e
+uma **alteração ou cancelamento** de uma reserva na semana em curso. Uma reserva
+para daqui a dois meses entra em silêncio — a gestora vê-a no Planeamento quando
+lá chegar. Sem este limite, o quadro do "Hoje" enchia-se de avisos sobre trabalho
+que ninguém vai fazer esta semana, e deixava de se ler.
+
+A "semana em curso" é a semana de Lisboa em que a limpeza cai, calculada com o
+relógio partilhado (`shared/dates/relogio.ts`), nunca com o fuso do telemóvel.
+
+Vão para `notices`, com `audience='gestao'`, e aparecem no quadro do ecrã "Hoje"
+— que até hoje só recebia confirmações de leitura de mensagens. Um aviso por
+limpeza afetada, substituído se a mesma limpeza voltar a mudar, para não
+acumular. Texto que diz o que mudou e o que fazer, não "erro de sincronização".
+
+O terceiro tipo de aviso que `mensagens.md:15` lista — "virada rápida do dia
+(prioridade alta)" — nasce da mesma origem e fica ligado aqui: uma reserva nova
+na semana em curso que traga entrada no mesmo dia diz isso no aviso, em vez de
+gerar um segundo.
 
 **O estado do calendário.** No fim de cada leitura, `unit_calendars` recebe
 `status` (`connected` ou `error`), `last_sync = now()` e `imported` = número de
