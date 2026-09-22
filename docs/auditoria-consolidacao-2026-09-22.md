@@ -29,7 +29,7 @@ exatamente isto, sem o lixo da prototipagem? A resposta prática está em `REPLI
 
 | Verificação | Método | Resultado |
 |---|---|---|
-| Estado vivo do esquema | `pg_tables`, `pg_policies`, `pg_proc`, `pg_trigger`, `pg_publication_tables`, `storage.buckets`, `vault.secrets`, advisors do Supabase | 33 tabelas, 51 funções, 73 políticas, 18 gatilhos, 3 vistas, 20 enums, 29 tabelas em tempo real, 1 bucket, 0 segredos no Vault |
+| Estado vivo do esquema | `pg_tables`, `pg_policies`, `pg_proc`, `pg_trigger`, `pg_publication_tables`, `storage.buckets`, `vault.secrets`, advisors do Supabase | 34 tabelas, 51 funções, 73 políticas, 19 gatilhos, 3 vistas, 20 enums, 29 tabelas em tempo real, 1 bucket, 0 segredos no Vault |
 | Histórico de migrações remoto | `list_migrations` | 29 entradas, última `0027_historico_fechado`; `0028`–`0035` ausentes |
 | Extensões | `pg_extension` | `pg_cron` e `pg_net` **não instaladas** → `0034` nunca correu; não há tarefa agendada |
 | Reconstrução numa base vazia | `supabase start` local com as 34 migrações (sem `0034`) | **Falha** em `0035`: `function "commit_location_detail" already exists with same argument types` |

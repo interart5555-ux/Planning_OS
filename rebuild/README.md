@@ -7,7 +7,7 @@
 
 | Ficheiro | O que é | Aplicar a |
 |---|---|---|
-| `db/01_esquema_publico.sql` | O esquema `public` completo e **já podado**: 33 tabelas, 20 enums, 50 funções, 18 gatilhos, 3 vistas, 73 políticas, índices, comentários e permissões. É um `supabase db dump --schema public` de uma base reconstruída das 35 migrações históricas mais a poda | Projeto **novo**, primeiro |
+| `db/01_esquema_publico.sql` | O esquema `public` completo e **já podado**: 33 tabelas, 20 enums, 51 funções, 19 gatilhos, 3 vistas, 72 políticas, índices, comentários e permissões. É um `supabase db dump --schema public` de uma base reconstruída das 35 migrações históricas mais a poda | Projeto **novo**, primeiro |
 | `db/02_tempo_real_e_storage.sql` | Publicação `supabase_realtime` (29 tabelas), bucket `job-photos` e as 4 políticas de Storage | Projeto novo, segundo |
 | `db/03_sementes_estruturais.sql` | A linha única de `company_settings` e os modelos das listas de execução (11 + 5 linhas) | Projeto novo, terceiro |
 | `db/04_agendador_ical.sql` | Tarefa `pg_cron` de hora a hora que chama a Edge Function `sync-calendars`. Cópia fiel da migração `0034` | Projeto novo, **depois** dos pré-requisitos manuais (extensões + Vault) |
