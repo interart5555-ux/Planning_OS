@@ -53,6 +53,17 @@ A poda também é proposta, não aplicada: o utilizador aprova.
 | M-005 | Testes de segurança têm de conseguir falhar | `implementar-empresa/reference-verificacao.md` secção B | aplicada 2026-09-19 |
 | M-006 | O comportamento do código ganha ao comentário | `implementar-empresa` Passo 2.3 + `reference-verificacao.md` secção C | aplicada 2026-09-19 |
 | M-007 | `personalizar-modulo` lê `src/` do template para ancorar perguntas e mockups | `personalizar-modulo` cabeçalho e Passo 5 | aplicada 2026-09-19 |
+| M-008 | Depois dos mockups, o próximo passo é o modelo de dados e a base real, sem fork intermédio em simulação | proposto: `implementar-empresa` Passos 1 e 4 | proposta |
+| M-009 | Comparar o processo descrito pela empresa com o que o template suporta | proposto: `personalizar-modulo` Passo 5 | proposta |
+| M-010 | Âmbito rastreável; "fora de âmbito" e decisões de produto aprovados pelo dono | proposto: `implementar-empresa` Passos 4–5 | proposta |
+| M-011 | Pré-requisitos externos e método de login pedidos no início | proposto: `personalizar-empresa` + `implementar-empresa` Passo 3 | proposta |
+| M-012 | Teste do dono em ambiente de testes no fim de cada pedaço | proposto: `implementar-empresa` Passo 6 | proposta |
+| M-013 | Fases de endurecimento e produção; triagem obrigatória dos pendentes | proposto: `implementar-empresa` Passo 7 | proposta |
+| M-014 | Dívida do template registada e devolvida no fecho | proposto: registo próprio + `implementar-empresa` Passo 7 | proposta |
+| M-015 | Nenhuma credencial em documentos de trabalho | proposto: `implementar-empresa` + `reference-verificacao.md` | proposta |
+| M-016 | Modelo de dados cobre apagar/arquivar, suspensão e quem cria cada entidade | proposto: `template-modelo-dados.md` | proposta |
+| M-017 | Controlos automáticos de qualidade (tipos, lint, testes, CI) no template | proposto: template + `implementar-empresa` Passo 5 | proposta |
+| M-018 | O que fica entre os módulos precisa de tarefas próprias | proposto: `implementar-empresa` Passo 4 | proposta |
 
 ## Entradas
 
@@ -157,6 +168,120 @@ A poda também é proposta, não aplicada: o utilizador aprova.
 - **Alteração ao procedimento:** ler `src/modules/<modulo>/` (types, config, mockData, rules,
   components) antes do questionário e do mockup; nunca escrever.
 - **Estado:** proposta (2026-09-18); aplicada (2026-09-19).
+
+### M-008 — Fork em simulação seguido de migração completa
+
+- **Problema:** depois de validados os mockups, a Fase 1 construiu a app personalizada com dados
+  simulados no browser. A Fase 2 teve depois de reescrever a camada de dados dos sete módulos para a
+  base de dados real. A personalização visual e as regras aproveitaram-se; a forma como cada módulo
+  guarda e lê os dados foi feita duas vezes.
+- **Onde:** ALClean, Fase 1 → Fase 2.
+- **Custo:** as Tasks 9 a 15 da Fase 2 são, em grande parte, a migração de código que a Fase 1 tinha
+  acabado de escrever. Foi preciso criar `licoes-modulo.md` para que a mesma migração não repetisse
+  os mesmos erros sete vezes.
+- **Causa:** procedimento. A ordem "fork em simulação → backend" vinha do template, que é um protótipo
+  sem servidor. Numa empresa real, a simulação é um passo intermédio que se deita fora.
+- **Alteração proposta:** mockups aprovados → modelo de dados → base (esquema, segurança, login) →
+  cada módulo personalizado já sobre dados reais, numa só passagem. A seguir, extrair a base da
+  ALClean para o template, para que a próxima empresa parta de uma base já testada.
+- **Estado:** proposta (2026-09-19).
+
+### M-009 — A lacuna "criar limpezas" só apareceu na execução
+
+- **Problema:** o perfil da ALClean diz que a gestora cria limpezas manuais, mas o template não tem essa ação; os mockups reutilizaram ecrãs existentes e ninguém comparou.
+- **Onde:** ALClean, validação dos módulos → descoberto na Fase 2 (Task 12).
+- **Custo:** a app não pode entrar em produção sem uma funcionalidade nova; por planear.
+- **Causa:** procedimento — nenhum passo compara o processo descrito com o que o template faz.
+- **Alteração proposta:** em `personalizar-modulo`, listar cada passo do processo como "suportado / em falta"; o que falta tem de ter ecrã no mockup.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-010 — Âmbito e decisões de produto sem regresso ao dono
+
+- **Problema:** iCal e modo offline ficaram "fora de âmbito" no spec sem aprovação explícita; decisões de produto (ex. sem aprovação automática após reabertura) foram tomadas pelo controlador.
+- **Onde:** ALClean, Fase 2.
+- **Custo:** o dono descobre as omissões só no fim.
+- **Causa:** procedimento — o spec pode excluir sem regresso ao dono; rulings técnicas e de produto misturadas.
+- **Alteração proposta:** matriz de rastreabilidade de `modulos/*.md` para tarefas ou "fora de âmbito" aprovado; rulings de produto pedem aprovação.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-011 — Pré-requisitos externos e login pedidos tarde
+
+- **Problema:** a chave `service_role`, a quota de email e o domínio de login só foram tratados quando bloquearam; `@alclean.local` foi recusado.
+- **Onde:** ALClean, Fase 2 (Tasks 6–7, Rulings 8–10).
+- **Custo:** uma tarefa parcial e três rulings de contorno.
+- **Causa:** procedimento — nenhum passo lista o que o dono tem de fornecer nem pergunta o método de login.
+- **Alteração proposta:** lista de pré-requisitos no teste rápido; pergunta "com que credencial entra a colaboradora?" no questionário.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-012 — O dono só testa no fim
+
+- **Problema:** o erro das datas de demonstração só foi apanhado no teste do dono, no fim.
+- **Onde:** ALClean, Fase 2.
+- **Custo:** retrabalho tardio em módulos já dados como concluídos.
+- **Causa:** procedimento — sem ponto de teste do dono por pedaço.
+- **Alteração proposta:** teste do dono em ambiente de testes no fim de cada pedaço.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-013 — Sem fase de endurecimento e produção
+
+- **Problema:** `implementar-empresa` acaba na "fase"; ~35 pendentes ficaram dispersos no registo de execução sem dono; a auditoria encontrou 6 bloqueios de produção.
+- **Onde:** ALClean, auditoria de 2026-09-19.
+- **Custo:** falhas de segurança por fechar e nenhum caminho definido até produção.
+- **Causa:** procedimento — faltam as fases finais.
+- **Alteração proposta:** fases de endurecimento (pendentes triados a/b/c, teste de ponta a ponta) e de produção (domínio, backups, dados reais, arranque assinado pelo dono).
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-014 — Defeitos do template sem caminho de volta
+
+- **Problema:** `DEMO_TODAY` fixo, cores fixas, e as correções de segurança da Fase 2 ficaram só na ALClean; a cópia já difere em 113 ficheiros.
+- **Onde:** ALClean, Fases 1–2.
+- **Custo:** a próxima empresa herdaria os mesmos defeitos.
+- **Causa:** procedimento — o fork é uma cópia sem regresso.
+- **Alteração proposta:** registo de "dívida do template" e passo de devolução no fecho (ou produto único, ver auditoria).
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-015 — Credencial escrita num documento de trabalho
+
+- **Problema:** a password temporária da gestora ficou em claro no registo de execução.
+- **Onde:** ALClean, Fase 2 (Task 7).
+- **Custo:** credencial a rodar.
+- **Causa:** procedimento — nenhuma regra o proíbe.
+- **Alteração proposta:** regra: nenhuma credencial em documentos, mesmo fora do git.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-016 — Modelo de dados sem apagar, arquivar e suspender
+
+- **Problema:** no esquema real, suspender não bloqueia nada e apagar uma pessoa destrói pagamentos; o teste às cegas também não tratou estes pontos.
+- **Onde:** ALClean, auditoria de segurança e teste às cegas, 2026-09-19.
+- **Custo:** uma falha crítica e uma alta.
+- **Causa:** procedimento — o `template-modelo-dados.md` não tem estas secções.
+- **Alteração proposta:** secções "Apagar e arquivar", "Acesso e suspensão" e "quem cria cada entidade" no template do modelo de dados.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-017 — Sem controlos automáticos de qualidade
+
+- **Problema:** sem tsconfig, lint, testes nem CI; 67 `any` na fronteira com a base de dados; erros só apanhados em revisão humana.
+- **Onde:** ALClean, auditoria de código, 2026-09-19.
+- **Custo:** defeitos detetados tarde e só por revisão.
+- **Causa:** procedimento/template — o template nunca teve estes controlos.
+- **Alteração proposta:** controlos no template, herdados por todas as empresas; o Passo 5 exige-os verdes.
+- **Estado:** proposta (2026-09-19). Aplicação depende da decisão de arquitetura (ver `docs/auditoria-2026-09-19.md`).
+
+### M-018 — O que está entre os módulos ficou sem dono
+
+- **Problema:** dezasseis tarefas e mais de vinte revisões, todas focadas num módulo de cada vez. O
+  que atravessa módulos não tinha dono: a página inicial continuou a anunciar "Fase 1 concluída, sem
+  base de dados, sem contas", e os botões da barra de topo não navegavam para lado nenhum, porque as
+  entradas nunca passavam a função de navegação. Ao corrigir, descobriu-se que um parâmetro de vista
+  estava morto desde o primeiro commit do fork.
+- **Onde:** ALClean, Fase 2 — encontrado pelo utilizador no site publicado, depois da revisão final.
+- **Custo:** duas correções depois de a fase ter sido dada como revista, e uma app publicada que
+  desmentia a si própria na primeira página.
+- **Causa:** procedimento — o plano é organizado por módulo, e nada cobre o que os liga.
+- **Alteração proposta:** cada fase inclui uma tarefa explícita para o que atravessa módulos
+  (página inicial, navegação, sessão partilhada, textos de estado do projeto), e a verificação final
+  percorre a app como um utilizador, de módulo em módulo, e não módulo a módulo isoladamente.
+- **Estado:** proposta (2026-09-21).
 
 ## Retiradas e fundidas
 
